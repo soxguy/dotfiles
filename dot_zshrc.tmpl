@@ -70,7 +70,10 @@ if [ -z "$SSH_AUTH_SOCK" ]; then
         # Launch a new instance of the agent
         ssh-agent -s &> $HOME/.ssh/ssh-agent
     fi
-    eval `cat $HOME/.ssh/ssh-agent`
+    # Use 'command cat' to bypass the batcat alias, and check file exists
+    if [ -f "$HOME/.ssh/ssh-agent" ]; then
+        eval `command cat $HOME/.ssh/ssh-agent`
+    fi
 fi
 
 #eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
