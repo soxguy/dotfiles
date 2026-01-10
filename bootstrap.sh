@@ -115,9 +115,14 @@ info "Bitwarden vault unlocked successfully"
 info "Syncing Bitwarden vault..."
 bw sync
 
-# Initialize and apply chezmoi
-info "Initializing chezmoi with dotfiles from $GITHUB_USER..."
-chezmoi init --apply "$GITHUB_USER"
+# Initialize and apply chezmoi (or update if already initialized)
+if [ -d "$HOME/.local/share/chezmoi" ]; then
+    info "Updating dotfiles from $GITHUB_USER..."
+    chezmoi update
+else
+    info "Initializing chezmoi with dotfiles from $GITHUB_USER..."
+    chezmoi init --apply "$GITHUB_USER"
+fi
 
 # Change default shell to zsh
 if [ "$SHELL" != "$(which zsh)" ]; then
