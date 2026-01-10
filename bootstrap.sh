@@ -30,7 +30,7 @@ sudo apt install -y \
     git \
     bat \
     nala \
-    exa \
+    eza \
     dnsutils \
     ca-certificates \
     mtr \
