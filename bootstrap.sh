@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Set up PATH immediately so all tools work throughout the script
+export PATH="$HOME/.local/bin:/snap/bin:$PATH"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -16,9 +19,8 @@ GITHUB_USER="${GITHUB_USER:-soxguy}"
 
 info "Starting bootstrap process..."
 
-# Ensure ~/.local/bin exists and is in PATH
+# Ensure ~/.local/bin exists
 mkdir -p ~/.local/bin
-export PATH="$HOME/.local/bin:/snap/bin:$PATH"
 
 # Update package lists
 info "Updating package lists..."
@@ -76,33 +78,42 @@ else
     info "uv already installed"
 fi
 
-# Bitwarden login
+# Bitwarden login and unlock
 info "Setting up Bitwarden..."
 echo ""
-warn "You need to log in to Bitwarden and unlock your vault."
-echo ""
 
-if ! bw login --check &> /dev/null; then
+# Check if already logged in
+BW_STATUS=$(bw status | jq -r '.status')
+
+if [ "$BW_STATUS" = "unauthenticated" ]; then
     info "Please log in to Bitwarden:"
     bw login
+    BW_STATUS=$(bw status | jq -r '.status')
 fi
 
-echo ""
-info "Please unlock your vault and export the session:"
-echo ""
-echo "  bw unlock"
-echo ""
-echo "Then run the export command it provides, e.g.:"
-echo "  export BW_SESSION=\"your-session-key\""
-echo ""
-read -p "Press Enter after you've exported BW_SESSION..."
+# Now handle unlock
+if [ "$BW_STATUS" = "locked" ]; then
+    info "Unlocking Bitwarden vault..."
+    echo ""
+    # Capture the session key directly from unlock
+    BW_SESSION=$(bw unlock --raw)
+    export BW_SESSION
+elif [ "$BW_STATUS" = "unlocked" ]; then
+    info "Bitwarden vault already unlocked"
+else
+    error "Unexpected Bitwarden status: $BW_STATUS"
+fi
 
 # Verify Bitwarden is unlocked
 if ! bw status | jq -e '.status == "unlocked"' > /dev/null 2>&1; then
-    error "Bitwarden vault is not unlocked. Please unlock and export BW_SESSION, then re-run this script."
+    error "Bitwarden vault is not unlocked. Please try again."
 fi
 
 info "Bitwarden vault unlocked successfully"
+
+# Sync vault to get latest items
+info "Syncing Bitwarden vault..."
+bw sync
 
 # Initialize and apply chezmoi
 info "Initializing chezmoi with dotfiles from $GITHUB_USER..."
