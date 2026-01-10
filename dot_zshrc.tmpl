@@ -62,9 +62,10 @@ alias cdr='cd ~/repos'
 
 #eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-# Add environment variables from BitWarden
-export HF_TOKEN={{ (bitwardenFields "item" "API Keys - zsh ENV").HF_TOKEN.value }}
-export CLAUDE_CODE_OAUTH_TOKEN={{ (bitwardenFields "item" "API Keys - zsh ENV").CLAUDE_CODE_OAUTH_TOKEN.value }}
+# Add environment variables from BitWarden (loops through all fields in the item)
+{{- range $key, $field := (bitwardenFields "item" "API Keys - zsh ENV") }}
+export {{ $key }}={{ $field.value }}
+{{- end }}
 
 # Initialize Starship prompt
 eval "$(starship init zsh)"
