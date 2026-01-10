@@ -91,6 +91,8 @@ fi
 if ! command -v claude-code &> /dev/null; then
     info "Installing Claude Code..."
     sudo npm install -g @anthropics/claude-code
+    info "Configuring Claude Code onboarding..."
+    echo '{"hasCompletedOnboarding": true}' > ~/.claude.json
 else
     info "Claude Code already installed"
 fi
