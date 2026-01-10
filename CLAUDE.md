@@ -35,7 +35,7 @@ The repository expects these items in Bitwarden vault:
 
 | Item Name | Type | Usage |
 |-----------|------|-------|
-| `SSH Key - GitHub` | Secure Note | Private key in Notes field → `~/.ssh/id_ed25519` |
+| `SSH Key - GitHub` | Secure Note | Private key in Notes field → `~/.ssh/id_ed25519`<br>Custom field `passkey` (Hidden) → SSH key passphrase for auto-loading |
 | `API Keys - zsh ENV` | Secure Note | Custom fields `HF_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN` → exported in `.zshrc` |
 
 ### File Naming Conventions
@@ -166,6 +166,29 @@ The `.zshrc.tmpl` file:
 - Defines `bwunlock()` function that checks `BW_SESSION` and unlocks if needed
 - Wraps `chezmoi` command to auto-unlock before `apply/update/init` operations
 - Exports environment variables by evaluating Bitwarden template functions at apply time
+- Automatically loads SSH keys with passphrases from Bitwarden on shell startup
+
+### SSH Key Auto-Loading
+
+The `.zshrc.tmpl` automatically loads SSH keys on shell startup:
+
+1. SSH agent starts/restores from saved state
+2. If Bitwarden is unlocked, SSH key is auto-loaded using passphrase from vault
+3. Key loading is skipped if already loaded (prevents redundant adds on subshells)
+
+**How It Works**:
+- Uses standard SSH_ASKPASS mechanism with temporary helper script
+- Retrieves passphrase from `passkey` custom field in "SSH Key - GitHub" Bitwarden item
+- Helper script created in /tmp with restrictive permissions, deleted immediately after use
+- Only runs when both ssh-agent is running AND Bitwarden is unlocked
+
+**Setup**:
+1. Ensure "SSH Key - GitHub" item in Bitwarden has `passkey` custom field (Hidden type)
+2. Run `bw sync` to pull changes locally
+3. Run `chezmoi apply` to regenerate `.zshrc`
+4. Start new shell - key will auto-load if Bitwarden is unlocked
+
+**Note**: If Bitwarden is locked on shell startup, you'll see: "Note: SSH agent running, but SSH key not auto-loaded (Bitwarden locked)"
 
 ### Bootstrap Script Error Handling
 

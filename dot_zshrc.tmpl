@@ -76,6 +76,37 @@ if [ -z "$SSH_AUTH_SOCK" ]; then
     fi
 fi
 
+# Auto-load SSH key with passphrase from Bitwarden
+if [ -n "$SSH_AUTH_SOCK" ] && [ -n "$BW_SESSION" ]; then
+    # Check if key is already loaded
+    SSH_KEY_PATH="$HOME/.ssh/id_ed25519"
+    if [ -f "$SSH_KEY_PATH" ]; then
+        # Get the key fingerprint to check if already loaded
+        KEY_FINGERPRINT=$(ssh-keygen -lf "$SSH_KEY_PATH" 2>/dev/null | awk '{print $2}')
+
+        # Check if this key is already in the agent
+        if ! ssh-add -l 2>/dev/null | grep -q "$KEY_FINGERPRINT"; then
+            # Create SSH_ASKPASS helper script in /tmp with restrictive permissions
+            SSH_ASKPASS_SCRIPT="/tmp/.ssh-askpass-$$.sh"
+            cat > "$SSH_ASKPASS_SCRIPT" << 'ASKPASS_EOF'
+#!/bin/sh
+# SSH_ASKPASS helper - retrieves passphrase from Bitwarden
+echo '{{ (bitwardenFields "item" "SSH Key - GitHub").passkey.value }}'
+ASKPASS_EOF
+            chmod 700 "$SSH_ASKPASS_SCRIPT"
+
+            # Use SSH_ASKPASS to add key non-interactively
+            DISPLAY=:0 SSH_ASKPASS="$SSH_ASKPASS_SCRIPT" SSH_ASKPASS_REQUIRE=force ssh-add "$SSH_KEY_PATH" 2>/dev/null
+
+            # Clean up helper script immediately
+            rm -f "$SSH_ASKPASS_SCRIPT"
+        fi
+    fi
+elif [ -n "$SSH_AUTH_SOCK" ] && [ -z "$BW_SESSION" ]; then
+    # SSH agent is running but Bitwarden not unlocked - inform user
+    echo "Note: SSH agent running, but SSH key not auto-loaded (Bitwarden locked)"
+fi
+
 #eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 # Add environment variables from BitWarden (loops through all fields in the item)
