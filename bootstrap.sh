@@ -127,7 +127,7 @@ fi
 # Change default shell to zsh
 if [ "$SHELL" != "$(which zsh)" ]; then
     info "Changing default shell to zsh..."
-    chsh -s "$(which zsh)"
+    chsh -s "$(which zsh)" < /dev/tty
 fi
 
 echo ""
