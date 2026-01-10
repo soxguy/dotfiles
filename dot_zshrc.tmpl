@@ -16,18 +16,18 @@ alias la='exa --icons --group-directories-first --git --long --all --header'
 alias cdr='cd ~/repos'
 
 
-if [ -z "$SSH_AUTH_SOCK" ]; then
-   # Check for a currently running instance of the agent
-   RUNNING_AGENT="`ps -ax | grep 'ssh-agent -s' | grep -v grep | wc -l | tr -d '[:space:]'`"
-   if [ "$RUNNING_AGENT" = "0" ]; then
-        # Launch a new instance of the agent
-        ssh-agent -s &> $HOME/.ssh/ssh-agent
-   fi
-   eval `cat $HOME/.ssh/ssh-agent`
-   ssh-add ~/.ssh/id_ed25519
-fi
+#if [ -z "$SSH_AUTH_SOCK" ]; then
+#   # Check for a currently running instance of the agent
+#   RUNNING_AGENT="`ps -ax | grep 'ssh-agent -s' | grep -v grep | wc -l | tr -d '[:space:]'`"
+#   if [ "$RUNNING_AGENT" = "0" ]; then
+#        # Launch a new instance of the agent
+#        ssh-agent -s &> $HOME/.ssh/ssh-agent
+#   fi
+#   eval `cat $HOME/.ssh/ssh-agent`
+#   ssh-add ~/.ssh/id_ed25519
+#fi
 
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+#eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 # Add environment variables from BitWarden
 export HF_TOKEN={{ (bitwardenFields "item" "API Keys - zsh ENV").HF_TOKEN.value }}
