@@ -32,7 +32,7 @@ sudo apt install -y \
     git \
     bat \
     nala \
-    eza \
+    exa \
     dnsutils \
     ca-certificates \
     mtr \
@@ -87,7 +87,7 @@ BW_STATUS=$(bw status | jq -r '.status')
 
 if [ "$BW_STATUS" = "unauthenticated" ]; then
     info "Please log in to Bitwarden:"
-    bw login
+    bw login < /dev/tty
     BW_STATUS=$(bw status | jq -r '.status')
 fi
 
@@ -96,7 +96,7 @@ if [ "$BW_STATUS" = "locked" ]; then
     info "Unlocking Bitwarden vault..."
     echo ""
     # Capture the session key directly from unlock
-    BW_SESSION=$(bw unlock --raw)
+    BW_SESSION=$(bw unlock --raw < /dev/tty)
     export BW_SESSION
 elif [ "$BW_STATUS" = "unlocked" ]; then
     info "Bitwarden vault already unlocked"
