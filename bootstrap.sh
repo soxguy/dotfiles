@@ -78,6 +78,23 @@ else
     info "uv already installed"
 fi
 
+# Install Node.js (required for Claude Code)
+if ! command -v node &> /dev/null; then
+    info "Installing Node.js..."
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+    sudo apt install -y nodejs
+else
+    info "Node.js already installed"
+fi
+
+# Install Claude Code
+if ! command -v claude-code &> /dev/null; then
+    info "Installing Claude Code..."
+    sudo npm install -g @anthropics/claude-code
+else
+    info "Claude Code already installed"
+fi
+
 # Bitwarden login and unlock
 info "Setting up Bitwarden..."
 echo ""
