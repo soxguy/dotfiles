@@ -37,6 +37,19 @@ chezmoi() {
     command chezmoi "$@"
 }
 
+# Offer to unlock Bitwarden on shell startup
+if [ -z "$BW_SESSION" ]; then
+    BW_STATUS=$(bw status 2>/dev/null | jq -r '.status')
+
+    if [ "$BW_STATUS" = "locked" ] || [ "$BW_STATUS" = "unauthenticated" ]; then
+        echo -n "Bitwarden is locked. Unlock now? (Y/n): "
+        read -r response
+        if [[ ! "$response" =~ ^[Nn]$ ]]; then
+            bwunlock
+        fi
+    fi
+fi
+
 
 alias bat='batcat'
 alias cat='batcat'

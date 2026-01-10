@@ -108,7 +108,11 @@ git push
    - Add to an existing Secure Note as a custom field, or
    - Create a new Secure Note
 
-2. **Reference it in your template:**
+2. **If using a template with loops** (like `.zshrc` for environment variables):
+   - Simply add the custom field to the existing Bitwarden item
+   - No template changes needed - the loop will automatically pick it up
+
+3. **If manually referencing in a template:**
    ```bash
    # For a custom field in an existing item
    {{ (bitwardenFields "item" "Item Name").field_name.value }}
@@ -117,10 +121,11 @@ git push
    {{ (bitwarden "item" "Item Name").notes }}
    ```
 
-3. **Sync and apply:**
+4. **Sync and apply:**
    ```bash
-   bw sync
+   bw sync          # Required: Pull latest changes from Bitwarden vault
    chezmoi apply
+   exec zsh         # Reload shell to pick up new environment variables
    ```
 
 ## Chezmoi File Naming Conventions
