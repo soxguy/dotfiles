@@ -88,19 +88,24 @@ else
     info "Homebrew already installed"
 fi
 
-# Install Node.js (required for Claude Code)
+# Install Node.js (needed for various tools)
 if ! command -v node &> /dev/null; then
     info "Installing Node.js..."
     curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
     sudo apt install -y nodejs
 else
     info "Node.js already installed"
+    # Check for and remove NPM version of Claude Code if it exists
+    if npm list -g @anthropics/claude-code &> /dev/null; then
+        warn "Found NPM installation of Claude Code, removing to avoid conflicts..."
+        sudo npm uninstall -g @anthropics/claude-code
+    fi
 fi
 
-# Install Claude Code
+# Install Claude Code (native binary)
 if ! command -v claude-code &> /dev/null; then
-    info "Installing Claude Code..."
-    sudo npm install -g @anthropics/claude-code
+    info "Installing Claude Code (native)..."
+    curl -fsSL https://claude.ai/install.sh | bash
     info "Configuring Claude Code onboarding..."
     echo '{"hasCompletedOnboarding": true}' > ~/.claude.json
 else
