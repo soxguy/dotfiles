@@ -74,12 +74,7 @@ fi
 # Set zstyles for antidote configuration
 zstyle ':antidote:bundle' use-friendly-names 'yes'
 
-# Clone antidote if necessary and initialize
-if [[ ! -d ${HOME}/.antidote ]]; then
-  git clone --depth=1 https://github.com/mattmc3/antidote ${HOME}/.antidote
-fi
-
-# Initialize antidote plugin manager
+# Initialize antidote plugin manager (installed via Ansible)
 source ${HOME}/.antidote/antidote.zsh
 antidote load
 

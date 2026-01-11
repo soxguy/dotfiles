@@ -105,6 +105,7 @@ info "Syncing Bitwarden vault..."
 bw sync
 
 # Initialize and apply chezmoi (or update if already initialized)
+# Note: This will automatically trigger ansible-pull via run_after_apply.sh.tmpl hook
 if [ -d "$HOME/.local/share/chezmoi" ]; then
     info "Updating dotfiles from $GITHUB_USER..."
     chezmoi update
@@ -112,14 +113,6 @@ else
     info "Initializing chezmoi with dotfiles from $GITHUB_USER..."
     chezmoi init --apply "$GITHUB_USER"
 fi
-
-# Run ansible-pull to install all packages and tools
-info "Running ansible-pull to configure system..."
-cd ~/.local/share/chezmoi
-ansible-pull -U "https://github.com/$GITHUB_USER/dotfiles.git" \
-    ansible/local.yml \
-    --ask-become-pass \
-    --directory ~/.local/share/ansible-pull
 
 echo ""
 info "Bootstrap complete!"
