@@ -6,6 +6,10 @@
 # Define config directory
 ZSHCONFDIR="${HOME}/.config/zsh"
 
+# Load local overrides first (not managed by chezmoi)
+# Allows overriding BW_LOCAL_ACCT, BW_ENV_VARS_NOTE, PATH additions, etc.
+[[ -f "$ZSHCONFDIR/local.zsh" ]] && source "$ZSHCONFDIR/local.zsh"
+
 # Always source these (needed for all shells, including non-interactive)
 [[ -f "$ZSHCONFDIR/path.zsh" ]] && source "$ZSHCONFDIR/path.zsh"
 [[ -f "$ZSHCONFDIR/exports.zsh" ]] && source "$ZSHCONFDIR/exports.zsh"
@@ -16,9 +20,6 @@ if [[ $- == *i* ]]; then
     [[ -f "$ZSHCONFDIR/aliases.zsh" ]] && source "$ZSHCONFDIR/aliases.zsh"
     [[ -f "$ZSHCONFDIR/plugins.zsh" ]] && source "$ZSHCONFDIR/plugins.zsh"
     [[ -f "$ZSHCONFDIR/prompt.zsh" ]] && source "$ZSHCONFDIR/prompt.zsh"
-
-    # Optional: Machine-specific overrides (not managed by chezmoi)
-    [[ -f "$ZSHCONFDIR/local.zsh" ]] && source "$ZSHCONFDIR/local.zsh"
 fi
 
 unset ZSHCONFDIR

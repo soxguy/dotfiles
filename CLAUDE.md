@@ -58,9 +58,18 @@ The repository expects these items in Bitwarden vault:
 |-----------|------|-------|
 | `SSH Key - GitHub` | Secure Note | Private key in Notes field → `~/.ssh/id_ed25519`<br>Custom field `passkey` (Hidden) → SSH key passphrase for auto-loading |
 | `API Keys - zsh ENV` | Secure Note | Custom fields `HF_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN` → exported in `.zshrc` |
-| `ubuntu-dawheat` | Login | Password field → Local account sudo password<br>Retrieved at runtime by ansible-pull for automated system updates |
+| `ubuntu-USERNAME` | Login | Password field → Local account sudo password<br>Retrieved at runtime by ansible-pull for automated system updates<br>**Pattern:** `ubuntu-dawheat` for user `dawheat`, `ubuntu-foo` for user `foo` |
 
-**Note:** The item name for the sudo password is stored in the `BW_LOCAL_ACCT` environment variable (defined in `~/.config/zsh/exports.zsh`). Change this value on different machines to point to the appropriate Bitwarden login item.
+**Bitwarden Configuration Variables:**
+- `BW_LOCAL_ACCT` - Automatically set to `ubuntu-USERNAME` pattern (e.g., `ubuntu-dawheat`)
+- `BW_ENV_VARS_NOTE` - Item name for environment variables (default: `"API Keys - zsh ENV"`)
+
+**Customization:** Override these in `~/.config/zsh/local.zsh` (not managed by chezmoi):
+```bash
+# Example ~/.config/zsh/local.zsh
+export BW_LOCAL_ACCT="my-custom-sudo-item"
+export BW_ENV_VARS_NOTE="My Custom ENV Vars"
+```
 
 ### File Naming Conventions
 
@@ -221,16 +230,32 @@ The zsh configuration is split into focused modules in `~/.config/zsh/`:
 
 **Main loader (`dot_zshrc`):**
 - Minimal file (~25 lines) that sources modular configs
+- Sources `local.zsh` first to allow overrides
 - Conditional sourcing: non-interactive shells only get PATH and exports
 - Interactive shells get full configuration (secrets, aliases, plugins, prompt)
 
 **Module files:**
+- `local.zsh` - **Local machine overrides** (NOT managed by chezmoi, loaded first)
 - `path.zsh` - PATH modifications (always loaded)
 - `private_exports.zsh.tmpl` - Environment variables from Bitwarden (always loaded, 0600 perms)
 - `private_secrets.zsh.tmpl` - Bitwarden integration + SSH agent (interactive only, 0600 perms)
 - `aliases.zsh` - Command aliases (interactive only)
 - `plugins.zsh` - Antidote plugin manager (interactive only)
 - `prompt.zsh` - Starship prompt (interactive only)
+
+**Using local.zsh for customization:**
+Create `~/.config/zsh/local.zsh` to override settings without modifying managed files:
+```bash
+# Example: Override Bitwarden item names
+export BW_LOCAL_ACCT="custom-sudo-item"
+export BW_ENV_VARS_NOTE="My ENV Vars"
+
+# Example: Add custom PATH entries
+export PATH="/custom/bin:$PATH"
+
+# Example: Override aliases
+alias ls='ls --color=auto'
+```
 
 ### Bitwarden Integration
 
@@ -271,30 +296,42 @@ The `~/.config/zsh/private_secrets.zsh.tmpl` automatically loads SSH keys on she
 The `run_after_apply.sh.tmpl` hook automatically retrieves your sudo password from Bitwarden to run ansible-pull without interactive prompts:
 
 **How It Works**:
-1. Hook sources `~/.config/zsh/exports.zsh` to get `BW_LOCAL_ACCT` environment variable
+1. Hook sources `~/.config/zsh/exports.zsh` to get `BW_LOCAL_ACCT` environment variable (default: `ubuntu-USERNAME`)
 2. Verifies Bitwarden vault is unlocked
 3. Retrieves password using `bw get password "$BW_LOCAL_ACCT"`
-4. Passes password to ansible-pull via `ANSIBLE_BECOME_PASS` environment variable
-5. Ansible uses this password for all tasks with `become: yes`
+4. If retrieval fails, automatically runs `bw sync` and retries once
+5. Passes password to ansible-pull via `ANSIBLE_BECOME_PASS` environment variable
+6. Ansible uses this password for all tasks with `become: yes`
 
 **Benefits**:
 - No interactive password prompts during `chezmoi update` or `chezmoi apply`
 - Password never stored on disk (retrieved fresh each time)
-- Portable across machines (just update `BW_LOCAL_ACCT` value)
-- Secure (requires Bitwarden vault to be unlocked)
+- Automatic sync retry if item not found initially
+- Username-based naming works across machines automatically
+- Portable and secure (requires Bitwarden vault to be unlocked)
 
 **Setup on New Machine**:
-1. Create a Login item in Bitwarden with your sudo password (e.g., "ubuntu-username")
-2. Run `bw sync` to sync the vault
-3. Edit `~/.local/share/chezmoi/dot_config/zsh/private_exports.zsh.tmpl`
-4. Update `BW_LOCAL_ACCT` value to match your Bitwarden item name
-5. Run `chezmoi apply` to regenerate the exports file
-6. Future `chezmoi update` commands will work without password prompts
+1. Create a Login item in Bitwarden following the naming pattern:
+   - Item name: `ubuntu-USERNAME` (e.g., `ubuntu-dawheat` for user `dawheat`)
+   - Password field: Your sudo password
+2. Run `bw sync` to sync the vault (or let the hook auto-sync on first run)
+3. Run `chezmoi init --apply` or `chezmoi update`
+4. The hook automatically detects your username and retrieves the correct password
+5. Future `chezmoi update` commands will work without password prompts
+
+**Custom Item Name**:
+If you prefer a different Bitwarden item name, create `~/.config/zsh/local.zsh`:
+```bash
+export BW_LOCAL_ACCT="my-custom-sudo-item"
+```
 
 **Troubleshooting**:
 - If you see "Error: Bitwarden vault must be unlocked", run `bwunlock`
-- If you see "Error: Could not retrieve password", verify the Bitwarden item exists and run `bw sync`
-- Password retrieval requires `BW_SESSION` environment variable to be set (handled by `bwunlock`)
+- If you see "Error: Failed to retrieve sudo password" after auto-sync:
+  - Verify the item exists: `bw get item "ubuntu-USERNAME"`
+  - Check item name matches: `echo $BW_LOCAL_ACCT`
+  - Ensure password field is set in the Bitwarden item
+- Password retrieval requires `BW_SESSION` environment variable (handled by `bwunlock`)
 
 ### Ubuntu Version Compatibility
 

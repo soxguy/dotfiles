@@ -4,7 +4,15 @@
 # Contains secrets retrieved from Bitwarden at chezmoi apply time
 
 # Bitwarden item name for local account sudo password
-export BW_LOCAL_ACCT="ubuntu-dawheat"
+# Pattern: ubuntu-USERNAME (e.g., ubuntu-dawheat, ubuntu-foo)
+# Override by setting BW_LOCAL_ACCT in ~/.config/zsh/local.zsh before this file loads
+: ${BW_LOCAL_ACCT:="ubuntu-{{ .chezmoi.username }}"}
+export BW_LOCAL_ACCT
+
+# Bitwarden item name for environment variables
+# Override by setting BW_ENV_VARS_NOTE in ~/.config/zsh/local.zsh before this file loads
+: ${BW_ENV_VARS_NOTE:="API Keys - zsh ENV"}
+export BW_ENV_VARS_NOTE
 
 # Add environment variables from BitWarden (loops through all fields in the item)
 {{- range $key, $field := (bitwardenFields "item" "API Keys - zsh ENV") }}

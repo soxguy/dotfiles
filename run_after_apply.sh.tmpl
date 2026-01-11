@@ -38,12 +38,41 @@ if [ -z "$BW_LOCAL_ACCT" ]; then
 fi
 
 # Retrieve sudo password from Bitwarden
-SUDO_PASSWORD=$(bw get password "$BW_LOCAL_ACCT" 2>/dev/null)
-if [ -z "$SUDO_PASSWORD" ]; then
-    echo "Error: Could not retrieve password from Bitwarden item '$BW_LOCAL_ACCT'"
-    echo "Please ensure the item exists and contains a password"
+SUDO_PASSWORD=$(bw get password "$BW_LOCAL_ACCT" 2>&1)
+BW_GET_EXIT=$?
+
+# If retrieval failed, try syncing and retry once
+if [ $BW_GET_EXIT -ne 0 ] || [ -z "$SUDO_PASSWORD" ]; then
+    echo "Note: Could not retrieve sudo password, syncing Bitwarden vault..."
+    if bw sync > /dev/null 2>&1; then
+        echo "Sync complete, retrying password retrieval..."
+        SUDO_PASSWORD=$(bw get password "$BW_LOCAL_ACCT" 2>&1)
+        BW_GET_EXIT=$?
+    fi
+fi
+
+# If still failed, show detailed error
+if [ $BW_GET_EXIT -ne 0 ] || [ -z "$SUDO_PASSWORD" ]; then
+    echo ""
+    echo "=========================================="
+    echo "ERROR: Failed to retrieve sudo password"
+    echo "=========================================="
+    echo ""
+    echo "Could not retrieve password from Bitwarden item: '$BW_LOCAL_ACCT'"
+    echo ""
+    echo "Troubleshooting steps:"
+    echo "  1. Ensure the Bitwarden item exists with that exact name"
+    echo "  2. Verify the item name: bw get item '$BW_LOCAL_ACCT'"
+    echo "  3. Check that the item has a password field set"
+    echo ""
+    echo "Bitwarden error output:"
+    echo "$SUDO_PASSWORD"
+    echo ""
     exit 1
 fi
+
+echo "✓ Successfully retrieved sudo password from Bitwarden"
+echo ""
 
 # Change to chezmoi source directory to ensure we're using committed playbooks
 cd "{{ .chezmoi.sourceDir }}"
