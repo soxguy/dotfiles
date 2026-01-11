@@ -1,0 +1,9 @@
+# ~/.config/zsh/exports.zsh
+#
+# Environment variable exports
+# Contains secrets retrieved from Bitwarden at chezmoi apply time
+
+# Add environment variables from BitWarden (loops through all fields in the item)
+{{- range $key, $field := (bitwardenFields "item" "API Keys - zsh ENV") }}
+export {{ $key }}={{ $field.value }}
+{{- end }}
