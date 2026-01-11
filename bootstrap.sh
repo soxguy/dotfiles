@@ -26,14 +26,16 @@ mkdir -p ~/.local/bin
 info "Updating package lists..."
 sudo apt update
 
-# Install absolute essentials needed for Ansible
-info "Installing essential packages for Ansible..."
+# Install absolute essentials needed for Ansible and bootstrap
+info "Installing essential packages for Ansible and bootstrap..."
 sudo apt install -y \
     git \
     python3 \
     python3-pip \
     python3-apt \
-    curl
+    curl \
+    unzip \
+    jq
 
 # Install Ansible
 if ! command -v ansible-pull &> /dev/null; then
