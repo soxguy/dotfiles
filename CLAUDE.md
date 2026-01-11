@@ -58,6 +58,9 @@ The repository expects these items in Bitwarden vault:
 |-----------|------|-------|
 | `SSH Key - GitHub` | Secure Note | Private key in Notes field → `~/.ssh/id_ed25519`<br>Custom field `passkey` (Hidden) → SSH key passphrase for auto-loading |
 | `API Keys - zsh ENV` | Secure Note | Custom fields `HF_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN` → exported in `.zshrc` |
+| `ubuntu-dawheat` | Login | Password field → Local account sudo password<br>Retrieved at runtime by ansible-pull for automated system updates |
+
+**Note:** The item name for the sudo password is stored in the `BW_LOCAL_ACCT` environment variable (defined in `~/.config/zsh/exports.zsh`). Change this value on different machines to point to the appropriate Bitwarden login item.
 
 ### File Naming Conventions
 
@@ -262,6 +265,46 @@ The `~/.config/zsh/private_secrets.zsh.tmpl` automatically loads SSH keys on she
 4. Start new shell - key will auto-load if Bitwarden is unlocked
 
 **Note**: If Bitwarden is locked on shell startup, you'll see: "Note: SSH agent running, but SSH key not auto-loaded (Bitwarden locked)"
+
+### Ansible Sudo Password Automation
+
+The `run_after_apply.sh.tmpl` hook automatically retrieves your sudo password from Bitwarden to run ansible-pull without interactive prompts:
+
+**How It Works**:
+1. Hook sources `~/.config/zsh/exports.zsh` to get `BW_LOCAL_ACCT` environment variable
+2. Verifies Bitwarden vault is unlocked
+3. Retrieves password using `bw get password "$BW_LOCAL_ACCT"`
+4. Passes password to ansible-pull via `ANSIBLE_BECOME_PASS` environment variable
+5. Ansible uses this password for all tasks with `become: yes`
+
+**Benefits**:
+- No interactive password prompts during `chezmoi update` or `chezmoi apply`
+- Password never stored on disk (retrieved fresh each time)
+- Portable across machines (just update `BW_LOCAL_ACCT` value)
+- Secure (requires Bitwarden vault to be unlocked)
+
+**Setup on New Machine**:
+1. Create a Login item in Bitwarden with your sudo password (e.g., "ubuntu-username")
+2. Run `bw sync` to sync the vault
+3. Edit `~/.local/share/chezmoi/dot_config/zsh/private_exports.zsh.tmpl`
+4. Update `BW_LOCAL_ACCT` value to match your Bitwarden item name
+5. Run `chezmoi apply` to regenerate the exports file
+6. Future `chezmoi update` commands will work without password prompts
+
+**Troubleshooting**:
+- If you see "Error: Bitwarden vault must be unlocked", run `bwunlock`
+- If you see "Error: Could not retrieve password", verify the Bitwarden item exists and run `bw sync`
+- Password retrieval requires `BW_SESSION` environment variable to be set (handled by `bwunlock`)
+
+### Ubuntu Version Compatibility
+
+The `system_packages` Ansible role automatically detects Ubuntu version and installs the correct packages:
+
+**Package name variations**:
+- **exa/eza**: Ubuntu 22.04 uses `exa`, Ubuntu 24.04+ uses `eza`
+- The role uses Ansible's `set_fact` to conditionally set the package name based on `ansible_distribution_version`
+
+This ensures the same dotfiles repository works across Ubuntu versions without manual modification.
 
 ### Bootstrap Script Error Handling
 
