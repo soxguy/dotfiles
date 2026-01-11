@@ -10,11 +10,9 @@ if ! command -v ansible-pull &> /dev/null; then
     exit 0
 fi
 
-# Get GitHub user from chezmoi config or environment, fallback to 'soxguy'
-GITHUB_USER="{{ .chezmoi.username }}"
-if [ -z "$GITHUB_USER" ] || [ "$GITHUB_USER" = "dawheat" ]; then
-    GITHUB_USER="${GITHUB_USER:-soxguy}"
-fi
+# Get GitHub user for dotfiles repo
+# Use environment variable if set, otherwise default to 'soxguy' (public repo)
+GITHUB_USER="${GITHUB_USER:-soxguy}"
 
 echo "Running ansible-pull to update system packages and tools..."
 echo "Repository: https://github.com/$GITHUB_USER/dotfiles.git"
