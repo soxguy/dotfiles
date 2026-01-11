@@ -78,6 +78,24 @@ else
     info "uv already installed"
 fi
 
+# Install Homebrew (Linux)
+if ! command -v brew &> /dev/null; then
+    info "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    # Add brew to PATH for this script
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+else
+    info "Homebrew already installed"
+fi
+
+# Install antidote (zsh plugin manager)
+if ! brew list antidote &> /dev/null 2>&1; then
+    info "Installing antidote..."
+    brew install antidote
+else
+    info "antidote already installed"
+fi
+
 # Install Node.js (required for Claude Code)
 if ! command -v node &> /dev/null; then
     info "Installing Node.js..."

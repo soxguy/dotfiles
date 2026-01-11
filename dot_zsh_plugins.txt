@@ -1,0 +1,5 @@
+# Syntax highlighting for commands
+zsh-users/zsh-syntax-highlighting
+
+# Fish-like autosuggestions
+zsh-users/zsh-autosuggestions

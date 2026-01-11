@@ -5,6 +5,9 @@ export PATH="/home/dawheat/.local/bin:$PATH"
 # Add Snap to path
 export PATH="/snap/bin:$PATH"
 
+# Initialize Homebrew
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
 
 # Bitwarden helper
 bwunlock() {
@@ -49,6 +52,10 @@ if [ -z "$BW_SESSION" ]; then
         fi
     fi
 fi
+
+# Initialize antidote plugin manager
+source $(brew --prefix)/opt/antidote/share/antidote/antidote.zsh
+antidote load
 
 
 alias bat='batcat'
@@ -106,8 +113,6 @@ elif [ -n "$SSH_AUTH_SOCK" ] && [ -z "$BW_SESSION" ]; then
     # SSH agent is running but Bitwarden not unlocked - inform user
     echo "Note: SSH agent running, but SSH key not auto-loaded (Bitwarden locked)"
 fi
-
-#eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 # Add environment variables from BitWarden (loops through all fields in the item)
 {{- range $key, $field := (bitwardenFields "item" "API Keys - zsh ENV") }}
