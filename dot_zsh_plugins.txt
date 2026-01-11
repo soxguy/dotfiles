@@ -1,5 +1,22 @@
-# Syntax highlighting for commands
-zsh-users/zsh-syntax-highlighting
+# Completions - Load first for initialization
+mattmc3/ez-compinit
+zsh-users/zsh-completions kind:fpath path:src
 
-# Fish-like autosuggestions
+# Completion enhancements
+aloxaf/fzf-tab
+belak/zsh-utils path:completion
+
+# Editor and keybindings
+belak/zsh-utils path:editor
+
+# History configuration
+belak/zsh-utils path:history
+
+# Syntax highlighting - Load late (after compinit)
+zdharma-continuum/fast-syntax-highlighting
+
+# Autosuggestions - Load after syntax highlighting
 zsh-users/zsh-autosuggestions
+
+# History search - Load last for keybinding priority
+zsh-users/zsh-history-substring-search
