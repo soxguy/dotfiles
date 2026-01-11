@@ -7,7 +7,7 @@
 ZSHCONFDIR="${HOME}/.config/zsh"
 
 # Load local overrides first (not managed by chezmoi)
-# Allows overriding BW_LOCAL_ACCT, BW_ENV_VARS_NOTE, PATH additions, etc.
+# Allows overriding BW_LOCAL_ACCT, PATH additions, etc.
 [[ -f "$ZSHCONFDIR/local.zsh" ]] && source "$ZSHCONFDIR/local.zsh"
 
 # Always source these (needed for all shells, including non-interactive)

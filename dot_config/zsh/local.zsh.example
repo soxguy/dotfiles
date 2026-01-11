@@ -15,11 +15,6 @@
 # Uncomment to use a different item name:
 #export BW_LOCAL_ACCT="my-custom-sudo-item"
 
-# Override the Bitwarden item name for environment variables
-# Default: "API Keys - zsh ENV"
-# Uncomment to use a different item name:
-#export BW_ENV_VARS_NOTE="My Custom ENV Vars"
-
 # ============================================================
 # PATH Modifications
 # ============================================================

@@ -58,20 +58,20 @@ The repository expects these items in Bitwarden vault:
 | Item Name | Type | Usage |
 |-----------|------|-------|
 | `SSH Key - GitHub` | Secure Note | Private key in Notes field → `~/.ssh/id_ed25519`<br>Custom field `passkey` (Hidden) → SSH key passphrase for auto-loading |
-| `API Keys - zsh ENV` | Secure Note | Custom fields `HF_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN` → exported in `.zshrc` |
+| `chezmoi-env-shared` | Secure Note | Custom fields for env vars exported on **all machines** (e.g., `HF_TOKEN`) |
+| `chezmoi-env-personal` | Secure Note | Custom fields for env vars exported only on **personal machines** |
+| `chezmoi-env-work` | Secure Note | Custom fields for env vars exported only on **work machines** |
 | `ubuntu-USERNAME` | Login | Password field → Local account sudo password<br>Retrieved at runtime by ansible-pull for automated system updates<br>**Pattern:** `ubuntu-dawheat` for user `dawheat`, `ubuntu-foo` for user `foo` |
 | `aws-cli-config-personal` | Secure Note | AWS SSO profile config in Notes field → `~/.aws/config-personal`<br>Created on all machines |
 | `aws-cli-config-work` | Secure Note | Work AWS SSO profile config in Notes field → `~/.aws/config-work`<br>Only created on work machines (controlled by `isWorkMachine` chezmoi data) |
 
 **Bitwarden Configuration Variables:**
 - `BW_LOCAL_ACCT` - Automatically set to `ubuntu-USERNAME` pattern (e.g., `ubuntu-dawheat`)
-- `BW_ENV_VARS_NOTE` - Item name for environment variables (default: `"API Keys - zsh ENV"`)
 
-**Customization:** Override these in `~/.config/zsh/local.zsh` (not managed by chezmoi):
+**Customization:** Override in `~/.config/zsh/local.zsh` (not managed by chezmoi):
 ```bash
 # Example ~/.config/zsh/local.zsh
 export BW_LOCAL_ACCT="my-custom-sudo-item"
-export BW_ENV_VARS_NOTE="My Custom ENV Vars"
 ```
 
 ### Chezmoi Data Variables
@@ -156,9 +156,15 @@ bw get item "Item Name" | jq '.fields'
 
 ### Adding Environment Variables
 
-The `~/.config/zsh/exports.zsh.tmpl` automatically exports all custom fields from "API Keys - zsh ENV":
+Environment variables are managed via three Bitwarden secure notes, selected based on machine type:
 
-1. Add custom field to "API Keys - zsh ENV" in Bitwarden (field name = env var name)
+- `chezmoi-env-shared` - Variables exported on **all machines**
+- `chezmoi-env-personal` - Variables exported only on **personal machines** (`isWorkMachine = false`)
+- `chezmoi-env-work` - Variables exported only on **work machines** (`isWorkMachine = true`)
+
+**To add a new environment variable:**
+
+1. Add a custom field to the appropriate Bitwarden item (field name = env var name)
 2. Run `bw sync` to pull changes locally
 3. Run `chezmoi apply` to regenerate `~/.config/zsh/exports.zsh`
 4. Run `exec zsh` to reload shell with new variables
@@ -277,9 +283,8 @@ cp ~/.config/zsh/local.zsh.example ~/.config/zsh/local.zsh
 
 Common overrides (see `local.zsh.example` for full documentation):
 ```bash
-# Override Bitwarden item names
+# Override Bitwarden item name for sudo password
 export BW_LOCAL_ACCT="custom-sudo-item"
-export BW_ENV_VARS_NOTE="My ENV Vars"
 
 # Add custom PATH entries
 export PATH="/custom/bin:$PATH"
@@ -300,7 +305,8 @@ The `~/.config/zsh/private_secrets.zsh.tmpl` file:
 
 The `~/.config/zsh/private_exports.zsh.tmpl` file:
 - Exports environment variables by evaluating Bitwarden template functions at apply time
-- Uses a loop to automatically export all custom fields from "API Keys - zsh ENV" item
+- Loads shared variables from `chezmoi-env-shared` on all machines
+- Conditionally loads from `chezmoi-env-work` or `chezmoi-env-personal` based on machine type
 
 ### SSH Key Auto-Loading
 

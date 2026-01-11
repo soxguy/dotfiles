@@ -2,6 +2,7 @@
 #
 # Environment variable exports
 # Contains secrets retrieved from Bitwarden at chezmoi apply time
+# Machine type: {{ if .isWorkMachine }}work{{ else }}personal{{ end }}
 
 # Bitwarden item name for local account sudo password
 # Pattern: ubuntu-USERNAME (e.g., ubuntu-dawheat, ubuntu-foo)
@@ -9,12 +10,18 @@
 : ${BW_LOCAL_ACCT:="ubuntu-{{ .chezmoi.username }}"}
 export BW_LOCAL_ACCT
 
-# Bitwarden item name for environment variables
-# Override by setting BW_ENV_VARS_NOTE in ~/.config/zsh/local.zsh before this file loads
-: ${BW_ENV_VARS_NOTE:="API Keys - zsh ENV"}
-export BW_ENV_VARS_NOTE
+# Shared environment variables (all machines)
+{{- range $key, $field := (bitwardenFields "item" "chezmoi-env-shared") }}
+export {{ $key }}={{ $field.value | quote }}
+{{- end }}
 
-# Add environment variables from BitWarden (loops through all fields in the item)
-{{- range $key, $field := (bitwardenFields "item" "API Keys - zsh ENV") }}
-export {{ $key }}={{ $field.value }}
+# Machine-specific environment variables
+{{- if .isWorkMachine }}
+{{- range $key, $field := (bitwardenFields "item" "chezmoi-env-work") }}
+export {{ $key }}={{ $field.value | quote }}
+{{- end }}
+{{- else }}
+{{- range $key, $field := (bitwardenFields "item" "chezmoi-env-personal") }}
+export {{ $key }}={{ $field.value | quote }}
+{{- end }}
 {{- end }}
