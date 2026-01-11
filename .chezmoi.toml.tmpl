@@ -1,0 +1,9 @@
+{{- $isWorkMachine := false -}}
+{{- if hasKey . "isWorkMachine" -}}
+{{-   $isWorkMachine = .isWorkMachine -}}
+{{- else -}}
+{{-   $isWorkMachine = promptBool "Is this a work machine" -}}
+{{- end -}}
+
+[data]
+    isWorkMachine = {{ $isWorkMachine }}

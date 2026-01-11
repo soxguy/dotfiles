@@ -61,3 +61,17 @@
 
 #export HTTP_PROXY="http://proxy.company.com:8080"
 #export HTTPS_PROXY="http://proxy.company.com:8080"
+
+# ============================================================
+# AWS Configuration
+# ============================================================
+
+# Override default AWS config file
+# Default: config-personal on all machines
+#export AWS_CONFIG_FILE="$HOME/.aws/config-work"
+
+# Set a default profile to use
+#export AWS_PROFILE="my-default-profile"
+
+# Disable AWS CLI pager (show output directly)
+#export AWS_PAGER=""

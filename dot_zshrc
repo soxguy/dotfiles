@@ -18,6 +18,7 @@ ZSHCONFDIR="${HOME}/.config/zsh"
 if [[ $- == *i* ]]; then
     [[ -f "$ZSHCONFDIR/secrets.zsh" ]] && source "$ZSHCONFDIR/secrets.zsh"
     [[ -f "$ZSHCONFDIR/aliases.zsh" ]] && source "$ZSHCONFDIR/aliases.zsh"
+    [[ -f "$ZSHCONFDIR/aws.zsh" ]] && source "$ZSHCONFDIR/aws.zsh"
     [[ -f "$ZSHCONFDIR/plugins.zsh" ]] && source "$ZSHCONFDIR/plugins.zsh"
     [[ -f "$ZSHCONFDIR/prompt.zsh" ]] && source "$ZSHCONFDIR/prompt.zsh"
 fi

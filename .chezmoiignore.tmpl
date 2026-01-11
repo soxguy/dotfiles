@@ -1,0 +1,10 @@
+README.md
+CLAUDE.md
+.claude
+.gitignore
+ansible/
+
+{{- if not .isWorkMachine }}
+# Skip work AWS config on personal machines
+.aws/config-work
+{{- end }}

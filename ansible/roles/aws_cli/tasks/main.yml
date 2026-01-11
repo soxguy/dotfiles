@@ -1,0 +1,37 @@
+---
+- name: Check if AWS CLI is installed
+  command: which aws
+  register: aws_check
+  changed_when: false
+  failed_when: false
+
+- name: Create temporary directory for AWS CLI installer
+  tempfile:
+    state: directory
+    prefix: awscli_
+  register: aws_temp_dir
+  when: aws_check.rc != 0
+
+- name: Download AWS CLI v2
+  get_url:
+    url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+    dest: "{{ aws_temp_dir.path }}/awscliv2.zip"
+    mode: '0644'
+  when: aws_check.rc != 0
+
+- name: Extract AWS CLI installer
+  unarchive:
+    src: "{{ aws_temp_dir.path }}/awscliv2.zip"
+    dest: "{{ aws_temp_dir.path }}"
+    remote_src: yes
+  when: aws_check.rc != 0
+
+- name: Install AWS CLI to user local directory
+  command: "{{ aws_temp_dir.path }}/aws/install --install-dir {{ ansible_env.HOME }}/.local/aws-cli --bin-dir {{ ansible_env.HOME }}/.local/bin --update"
+  when: aws_check.rc != 0
+
+- name: Clean up AWS CLI installer
+  file:
+    path: "{{ aws_temp_dir.path }}"
+    state: absent
+  when: aws_check.rc != 0

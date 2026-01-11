@@ -28,6 +28,7 @@ The repository uses a hybrid approach with chezmoi and Ansible:
 - nodejs: Node.js LTS
 - claude_code: Claude Code CLI
 - antidote: Zsh plugin manager
+- aws_cli: AWS CLI v2
 
 ### Secrets Management Flow
 
@@ -59,6 +60,8 @@ The repository expects these items in Bitwarden vault:
 | `SSH Key - GitHub` | Secure Note | Private key in Notes field → `~/.ssh/id_ed25519`<br>Custom field `passkey` (Hidden) → SSH key passphrase for auto-loading |
 | `API Keys - zsh ENV` | Secure Note | Custom fields `HF_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN` → exported in `.zshrc` |
 | `ubuntu-USERNAME` | Login | Password field → Local account sudo password<br>Retrieved at runtime by ansible-pull for automated system updates<br>**Pattern:** `ubuntu-dawheat` for user `dawheat`, `ubuntu-foo` for user `foo` |
+| `aws-cli-config-personal` | Secure Note | AWS SSO profile config in Notes field → `~/.aws/config-personal`<br>Created on all machines |
+| `aws-cli-config-work` | Secure Note | Work AWS SSO profile config in Notes field → `~/.aws/config-work`<br>Only created on work machines (controlled by `isWorkMachine` chezmoi data) |
 
 **Bitwarden Configuration Variables:**
 - `BW_LOCAL_ACCT` - Automatically set to `ubuntu-USERNAME` pattern (e.g., `ubuntu-dawheat`)
@@ -70,6 +73,18 @@ The repository expects these items in Bitwarden vault:
 export BW_LOCAL_ACCT="my-custom-sudo-item"
 export BW_ENV_VARS_NOTE="My Custom ENV Vars"
 ```
+
+### Chezmoi Data Variables
+
+The repository uses `.chezmoi.toml.tmpl` to prompt for machine-specific configuration during `chezmoi init`:
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `isWorkMachine` | boolean | Set during `chezmoi init` via prompt. Controls whether work-specific files (e.g., `~/.aws/config-work`) are created. |
+
+**To view current data:** `chezmoi data`
+
+**To change machine type:** `chezmoi init --force` (re-prompts for all data)
 
 ### File Naming Conventions
 
@@ -189,12 +204,14 @@ The script uses `GITHUB_USER` environment variable (defaults to "soxguy") to det
 
 ```
 ~/.local/share/chezmoi/                    # Chezmoi source directory
+├── .chezmoi.toml.tmpl                      # Machine type detection (isWorkMachine prompt)
+├── .chezmoiignore.tmpl                     # Conditional file ignoring
 ├── bootstrap.sh                            # Minimal bootstrap (Ansible, chezmoi, Bitwarden)
 ├── run_after_apply.sh.tmpl                # Hook: triggers ansible-pull after chezmoi apply
 │
 ├── ansible/                                # Ansible configuration
 │   ├── local.yml                          # Main playbook for ansible-pull
-│   └── roles/                             # Ansible roles (8 total)
+│   └── roles/                             # Ansible roles (9 total)
 │       ├── system_packages/               # Apt packages
 │       ├── starship/                      # Starship prompt
 │       ├── bitwarden_cli/                 # Bitwarden CLI
@@ -202,7 +219,8 @@ The script uses `GITHUB_USER` environment variable (defaults to "soxguy") to det
 │       ├── homebrew/                      # Homebrew
 │       ├── nodejs/                        # Node.js LTS
 │       ├── claude_code/                   # Claude Code CLI
-│       └── antidote/                      # Zsh plugin manager
+│       ├── antidote/                      # Zsh plugin manager
+│       └── aws_cli/                       # AWS CLI v2
 │
 ├── dot_zshrc                              # Minimal zsh loader
 ├── dot_zsh_plugins.txt                    # Antidote plugin declarations
@@ -214,9 +232,14 @@ The script uses `GITHUB_USER` environment variable (defaults to "soxguy") to det
 │   │   ├── private_exports.zsh.tmpl       # Environment variables (from Bitwarden, 0600 perms)
 │   │   ├── private_secrets.zsh.tmpl       # Bitwarden + SSH agent + key auto-loading (0600 perms)
 │   │   ├── aliases.zsh                    # Command aliases
+│   │   ├── aws.zsh                        # AWS CLI config and helper functions
 │   │   ├── plugins.zsh                    # Antidote setup
 │   │   └── prompt.zsh                     # Starship initialization
 │   └── starship.toml                      # Starship prompt theme
+│
+├── private_dot_aws/                       # AWS configuration (from Bitwarden)
+│   ├── private_config-personal.tmpl       # Personal AWS SSO profiles (all machines)
+│   └── private_config-work.tmpl           # Work AWS SSO profiles (work machines only)
 │
 └── private_dot_ssh/
     ├── private_id_ed25519.tmpl            # SSH private key (from Bitwarden)
@@ -241,6 +264,7 @@ The zsh configuration is split into focused modules in `~/.config/zsh/`:
 - `private_exports.zsh.tmpl` - Environment variables from Bitwarden (always loaded, 0600 perms)
 - `private_secrets.zsh.tmpl` - Bitwarden integration + SSH agent (interactive only, 0600 perms)
 - `aliases.zsh` - Command aliases (interactive only)
+- `aws.zsh` - AWS CLI configuration and helper functions (interactive only)
 - `plugins.zsh` - Antidote plugin manager (interactive only)
 - `prompt.zsh` - Starship prompt (interactive only)
 
@@ -359,3 +383,36 @@ This ensures the same dotfiles repository works across Ubuntu versions without m
 - Handles Bitwarden state machine: `unauthenticated` → `locked` → `unlocked`
 - Uses `/dev/tty` for interactive prompts in piped execution context
 - Supports re-running (updates instead of failing if chezmoi already initialized)
+
+### AWS CLI Integration
+
+The repository provides AWS CLI v2 with machine-specific SSO profile configuration:
+
+**Architecture:**
+- AWS CLI v2 installed via Ansible role to `~/.local/bin` (no sudo required)
+- SSO profile configs stored in Bitwarden secure notes
+- Separate config files: `~/.aws/config-personal` (all machines) and `~/.aws/config-work` (work machines only)
+- Shell functions to switch between configs
+
+**Config files:**
+- `~/.aws/config-personal` - Created from `aws-cli-config-personal` Bitwarden item on all machines
+- `~/.aws/config-work` - Created from `aws-cli-config-work` Bitwarden item only on work machines (controlled by `isWorkMachine` chezmoi data)
+
+**Shell functions (from `aws.zsh`):**
+- `aws-personal` - Switch to personal AWS config
+- `aws-work` - Switch to work AWS config (fails gracefully on personal machines)
+- `awslogin` - Alias for `aws sso login`
+- `awswho` - Alias for `aws sts get-caller-identity`
+- `awsprofiles` - Alias for `aws configure list-profiles`
+
+**Setup on new machine:**
+1. During `chezmoi init`, answer "Is this a work machine?" prompt
+2. `chezmoi apply` creates appropriate config files from Bitwarden
+3. Use `aws-personal` or `aws-work` to switch configs
+4. Use `awslogin` to authenticate via SSO
+
+**Override default config in `local.zsh`:**
+```bash
+export AWS_CONFIG_FILE="$HOME/.aws/config-work"
+export AWS_PROFILE="my-default-profile"
+```

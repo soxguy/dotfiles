@@ -19,6 +19,7 @@
     - nodejs
     - claude_code
     - antidote
+    - aws_cli
 
   post_tasks:
     - name: Check if default shell is zsh

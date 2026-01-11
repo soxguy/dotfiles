@@ -111,7 +111,7 @@ if [ -d "$HOME/.local/share/chezmoi" ]; then
     chezmoi update
 else
     info "Initializing chezmoi with dotfiles from $GITHUB_USER..."
-    chezmoi init --apply "$GITHUB_USER"
+    chezmoi init --apply "$GITHUB_USER" < /dev/tty
 fi
 
 echo ""
