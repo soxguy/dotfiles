@@ -21,5 +21,6 @@
       - vim
       - zsh
       - unzip
+      - expect
     state: present
   become: yes

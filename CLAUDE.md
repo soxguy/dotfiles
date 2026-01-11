@@ -198,8 +198,8 @@ The script uses `GITHUB_USER` environment variable (defaults to "soxguy") to det
 ├── dot_config/
 │   ├── zsh/                               # Modular zsh configuration
 │   │   ├── path.zsh                       # PATH modifications
-│   │   ├── exports.zsh.tmpl               # Environment variables (from Bitwarden)
-│   │   ├── secrets.zsh.tmpl               # Bitwarden + SSH agent + key auto-loading
+│   │   ├── private_exports.zsh.tmpl       # Environment variables (from Bitwarden, 0600 perms)
+│   │   ├── private_secrets.zsh.tmpl       # Bitwarden + SSH agent + key auto-loading (0600 perms)
 │   │   ├── aliases.zsh                    # Command aliases
 │   │   ├── plugins.zsh                    # Antidote setup
 │   │   └── prompt.zsh                     # Starship initialization
@@ -223,42 +223,42 @@ The zsh configuration is split into focused modules in `~/.config/zsh/`:
 
 **Module files:**
 - `path.zsh` - PATH modifications (always loaded)
-- `exports.zsh.tmpl` - Environment variables from Bitwarden (always loaded)
-- `secrets.zsh.tmpl` - Bitwarden integration + SSH agent (interactive only)
+- `private_exports.zsh.tmpl` - Environment variables from Bitwarden (always loaded, 0600 perms)
+- `private_secrets.zsh.tmpl` - Bitwarden integration + SSH agent (interactive only, 0600 perms)
 - `aliases.zsh` - Command aliases (interactive only)
 - `plugins.zsh` - Antidote plugin manager (interactive only)
 - `prompt.zsh` - Starship prompt (interactive only)
 
 ### Bitwarden Integration
 
-The `~/.config/zsh/secrets.zsh.tmpl` file:
+The `~/.config/zsh/private_secrets.zsh.tmpl` file:
 - Defines `bwunlock()` function that checks `BW_SESSION` and unlocks if needed
 - Wraps `chezmoi` command to auto-unlock before `apply/update/init` operations
 - Manages SSH agent startup and restoration from saved state
 - Automatically loads SSH keys with passphrases from Bitwarden on shell startup
 
-The `~/.config/zsh/exports.zsh.tmpl` file:
+The `~/.config/zsh/private_exports.zsh.tmpl` file:
 - Exports environment variables by evaluating Bitwarden template functions at apply time
 - Uses a loop to automatically export all custom fields from "API Keys - zsh ENV" item
 
 ### SSH Key Auto-Loading
 
-The `~/.config/zsh/secrets.zsh.tmpl` automatically loads SSH keys on shell startup:
+The `~/.config/zsh/private_secrets.zsh.tmpl` automatically loads SSH keys on shell startup:
 
 1. SSH agent starts/restores from saved state
 2. If Bitwarden is unlocked, SSH key is auto-loaded using passphrase from vault
 3. Key loading is skipped if already loaded (prevents redundant adds on subshells)
 
 **How It Works**:
-- Uses standard SSH_ASKPASS mechanism with temporary helper script
+- Uses expect to automate ssh-add passphrase entry
 - Retrieves passphrase from `passkey` custom field in "SSH Key - GitHub" Bitwarden item
-- Helper script created in /tmp with restrictive permissions, deleted immediately after use
+- Passphrase handled in-memory only (never written to disk)
 - Only runs when both ssh-agent is running AND Bitwarden is unlocked
 
 **Setup**:
 1. Ensure "SSH Key - GitHub" item in Bitwarden has `passkey` custom field (Hidden type)
 2. Run `bw sync` to pull changes locally
-3. Run `chezmoi apply` to regenerate `~/.config/zsh/secrets.zsh`
+3. Run `chezmoi apply` to regenerate `~/.config/zsh/secrets.zsh` (with 0600 permissions)
 4. Start new shell - key will auto-load if Bitwarden is unlocked
 
 **Note**: If Bitwarden is locked on shell startup, you'll see: "Note: SSH agent running, but SSH key not auto-loaded (Bitwarden locked)"
