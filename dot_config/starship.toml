@@ -91,7 +91,9 @@ disabled = false
 
 [cmd_duration]
 disabled = false
-format = "[[](fg:#5C7F6A)⏱️ $duration[](fg:#5C7F6A)]($style)"
+# format = " ⏱️ $duration "
+format = "[[](fg:#5C7F6A)⏱️ $duration[ ](fg:#5C7F6A)]($style)"
+# style = "fg:#5C7F6A"
 style = "#5C7F6A inverted"
 
 [character]
