@@ -15,18 +15,36 @@ bwunlock() {
         echo "Bitwarden already unlocked"
         return 0
     fi
-    
+
     BW_STATUS=$(bw status 2>/dev/null | jq -r '.status')
-    
+
     if [ "$BW_STATUS" = "unauthenticated" ]; then
         echo "Logging in to Bitwarden..."
         bw login
         BW_STATUS=$(bw status | jq -r '.status')
     fi
-    
+
     if [ "$BW_STATUS" = "locked" ]; then
-        echo "Unlocking Bitwarden vault..."
-        export BW_SESSION=$(bw unlock --raw)
+        while true; do
+            echo "Unlocking Bitwarden vault..."
+            export BW_SESSION=$(bw unlock --raw)
+
+            # Verify unlock was successful
+            BW_STATUS=$(bw status 2>/dev/null | jq -r '.status')
+            if [ "$BW_STATUS" = "unlocked" ]; then
+                echo "Syncing Bitwarden vault..."
+                bw sync
+                break
+            fi
+
+            # Unlock failed, ask to retry or cancel
+            echo -n "Unlock failed. Try again? (Y/n): "
+            read -r response
+            if [[ "$response" =~ ^[Nn]$ ]]; then
+                echo "Bitwarden unlock cancelled"
+                return 1
+            fi
+        done
     fi
 }
 
