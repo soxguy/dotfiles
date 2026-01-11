@@ -26,5 +26,6 @@
       - zsh
       - unzip
       - expect
+      - wslu
     state: present
   become: yes

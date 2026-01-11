@@ -193,7 +193,7 @@ New machine setup workflow:
 9. **Triggers ansible-pull automatically** (via `run_after_apply.sh.tmpl` hook)
 
 **What Ansible installs:**
-- System packages: git, zsh, vim, bat, eza, and more (via system_packages role)
+- System packages: git, zsh, vim, bat, eza, wslu, and more (via system_packages role)
 - Development tools: Starship, uv, Homebrew, Node.js, Claude Code (via respective roles)
 - Zsh plugin manager: antidote (via antidote role)
 - Changes default shell to zsh (post_task in ansible/local.yml)
@@ -228,7 +228,7 @@ The script uses `GITHUB_USER` environment variable (defaults to "soxguy") to det
 ├── dot_config/
 │   ├── zsh/                               # Modular zsh configuration
 │   │   ├── local.zsh.example              # Template for local overrides (copy to local.zsh)
-│   │   ├── path.zsh                       # PATH modifications
+│   │   ├── path.zsh                       # PATH modifications + WSL browser config
 │   │   ├── private_exports.zsh.tmpl       # Environment variables (from Bitwarden, 0600 perms)
 │   │   ├── private_secrets.zsh.tmpl       # Bitwarden + SSH agent + key auto-loading (0600 perms)
 │   │   ├── aliases.zsh                    # Command aliases
@@ -260,10 +260,10 @@ The zsh configuration is split into focused modules in `~/.config/zsh/`:
 
 **Module files:**
 - `local.zsh` - **Local machine overrides** (NOT managed by chezmoi, loaded first)
-- `path.zsh` - PATH modifications (always loaded)
+- `path.zsh` - PATH modifications + WSL browser config (always loaded)
 - `private_exports.zsh.tmpl` - Environment variables from Bitwarden (always loaded, 0600 perms)
 - `private_secrets.zsh.tmpl` - Bitwarden integration + SSH agent (interactive only, 0600 perms)
-- `aliases.zsh` - Command aliases (interactive only)
+- `aliases.zsh` - Command aliases, nala→apt alias (interactive only)
 - `aws.zsh` - AWS CLI configuration and helper functions (interactive only)
 - `plugins.zsh` - Antidote plugin manager (interactive only)
 - `prompt.zsh` - Starship prompt (interactive only)
@@ -416,3 +416,20 @@ The repository provides AWS CLI v2 with machine-specific SSO profile configurati
 export AWS_CONFIG_FILE="$HOME/.aws/config-work"
 export AWS_PROFILE="my-default-profile"
 ```
+
+### WSL Integration
+
+The repository includes WSL-specific enhancements for seamless Windows integration:
+
+**wslu utilities** (installed via system_packages role):
+- `wslview` - Opens files/URLs in Windows default applications
+- Other WSL utilities for clipboard, paths, and system info
+
+**Browser integration** (`path.zsh`):
+- Sets `BROWSER=wslview` so CLI tools that open URLs use Windows browser
+- Enables `claude --dangerously-skip-permissions` OAuth flow and similar tools to work in WSL
+
+**Nala package manager** (`aliases.zsh`):
+- Conditional alias: `apt='nala'` when nala is installed
+- Nala provides prettier output, parallel downloads, and transaction history
+- Falls back to standard apt if nala not available

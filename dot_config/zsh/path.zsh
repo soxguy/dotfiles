@@ -11,3 +11,6 @@ export PATH="/snap/bin:$PATH"
 
 # Initialize Homebrew
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+# Set default browser to wslview for WSL environments
+export BROWSER=wslview

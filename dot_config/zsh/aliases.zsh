@@ -15,3 +15,8 @@ alias la='exa --icons --group-directories-first --git --long --all --header'
 
 # Quick navigation
 alias cdr='cd ~/repos'
+
+# Alias Nala for package management
+if command -v nala &> /dev/null; then
+  alias apt='nala'
+fi
