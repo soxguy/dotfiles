@@ -1,0 +1,35 @@
+#!/bin/bash
+# This runs automatically after 'chezmoi apply' or 'chezmoi update'
+# Triggers ansible-pull to ensure system packages/tools are up to date
+
+set -e
+
+# Only run if ansible-pull is installed
+if ! command -v ansible-pull &> /dev/null; then
+    echo "Note: ansible-pull not installed, skipping system configuration"
+    exit 0
+fi
+
+# Get GitHub user from chezmoi config or environment, fallback to 'soxguy'
+GITHUB_USER="{{ .chezmoi.username }}"
+if [ -z "$GITHUB_USER" ] || [ "$GITHUB_USER" = "dawheat" ]; then
+    GITHUB_USER="${GITHUB_USER:-soxguy}"
+fi
+
+echo "Running ansible-pull to update system packages and tools..."
+echo "Repository: https://github.com/$GITHUB_USER/dotfiles.git"
+echo ""
+
+# Change to chezmoi source directory to ensure we're using committed playbooks
+cd "{{ .chezmoi.sourceDir }}"
+
+# Run ansible-pull
+# Note: Uses local playbook from current checkout, not re-cloning
+ansible-pull \
+    --directory ~/.local/share/ansible-pull \
+    --url "https://github.com/$GITHUB_USER/dotfiles.git" \
+    ansible/local.yml \
+    --ask-become-pass
+
+echo ""
+echo "Ansible configuration complete!"

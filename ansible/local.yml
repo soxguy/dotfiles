@@ -1,0 +1,35 @@
+---
+- name: Configure Ubuntu/WSL2 Development Environment
+  hosts: localhost
+  connection: local
+  become: yes
+
+  tasks:
+    - name: Ensure ~/.local/bin exists
+      file:
+        path: "{{ ansible_env.HOME }}/.local/bin"
+        state: directory
+        mode: '0755'
+      become: no
+
+  roles:
+    - system_packages
+    - starship
+    - bitwarden_cli
+    - uv
+    - homebrew
+    - nodejs
+    - claude_code
+
+  post_tasks:
+    - name: Check if default shell is zsh
+      command: echo $SHELL
+      register: current_shell
+      changed_when: false
+      become: no
+
+    - name: Change default shell to zsh
+      user:
+        name: "{{ ansible_env.USER }}"
+        shell: /usr/bin/zsh
+      when: current_shell.stdout != '/usr/bin/zsh'

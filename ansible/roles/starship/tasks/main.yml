@@ -1,0 +1,14 @@
+---
+- name: Check if starship is installed
+  stat:
+    path: "{{ ansible_env.HOME }}/.local/bin/starship"
+  register: starship_bin
+  become: no
+
+- name: Install starship
+  shell: |
+    curl -sS https://starship.rs/install.sh | sh -s -- -y -b {{ ansible_env.HOME }}/.local/bin
+  args:
+    creates: "{{ ansible_env.HOME }}/.local/bin/starship"
+  when: not starship_bin.stat.exists
+  become: no

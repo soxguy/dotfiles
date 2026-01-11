@@ -1,0 +1,23 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install essential packages
+  apt:
+    name:
+      - git
+      - bat
+      - nala
+      - eza
+      - dnsutils
+      - ca-certificates
+      - mtr
+      - jq
+      - curl
+      - build-essential
+      - vim
+      - zsh
+      - unzip
+    state: present

@@ -1,0 +1,17 @@
+---
+- name: Check if uv is installed
+  command: which uv
+  register: uv_check
+  changed_when: false
+  failed_when: false
+  become: no
+
+- name: Install uv
+  shell: |
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+  args:
+    creates: "{{ ansible_env.HOME }}/.local/bin/uv"
+  when: uv_check.rc != 0
+  become: no
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"

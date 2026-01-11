@@ -17,7 +17,7 @@ error() { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 # GitHub username for dotfiles repo
 GITHUB_USER="${GITHUB_USER:-soxguy}"
 
-info "Starting bootstrap process..."
+info "Starting minimal bootstrap process..."
 
 # Ensure ~/.local/bin exists
 mkdir -p ~/.local/bin
@@ -26,29 +26,24 @@ mkdir -p ~/.local/bin
 info "Updating package lists..."
 sudo apt update
 
-# Install essential packages
-info "Installing essential packages..."
+# Install absolute essentials needed for Ansible
+info "Installing essential packages for Ansible..."
 sudo apt install -y \
     git \
-    bat \
-    nala \
-    eza \
-    dnsutils \
-    ca-certificates \
-    mtr \
-    jq \
-    curl \
-    build-essential \
-    vim \
-    zsh \
-    unzip
+    python3 \
+    python3-pip \
+    python3-apt \
+    curl
 
-# Install starship prompt
-if ! command -v starship &> /dev/null; then
-    info "Installing starship..."
-    curl -sS https://starship.rs/install.sh | sh -s -- -y -b ~/.local/bin
+# Install Ansible
+if ! command -v ansible-pull &> /dev/null; then
+    info "Installing Ansible..."
+    sudo apt install -y software-properties-common
+    sudo add-apt-repository -y ppa:ansible/ansible
+    sudo apt update
+    sudo apt install -y ansible
 else
-    info "Starship already installed"
+    info "Ansible already installed"
 fi
 
 # Install chezmoi
@@ -56,10 +51,10 @@ if ! command -v chezmoi &> /dev/null; then
     info "Installing chezmoi..."
     sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
 else
-    info "Chezmoi already installed"
+    info "chezmoi already installed"
 fi
 
-# Install Bitwarden CLI (direct binary, avoids snap/systemd issues on WSL2)
+# Install Bitwarden CLI (needed before chezmoi init for templates)
 if ! command -v bw &> /dev/null; then
     info "Installing Bitwarden CLI..."
     curl -sL "https://vault.bitwarden.com/download/?app=cli&platform=linux" -o /tmp/bw.zip
@@ -68,48 +63,6 @@ if ! command -v bw &> /dev/null; then
     rm /tmp/bw.zip
 else
     info "Bitwarden CLI already installed"
-fi
-
-# Install uv (Python package manager)
-if ! command -v uv &> /dev/null; then
-    info "Installing uv..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-else
-    info "uv already installed"
-fi
-
-# Install Homebrew (Linux)
-if ! command -v brew &> /dev/null; then
-    info "Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    # Add brew to PATH for this script
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-else
-    info "Homebrew already installed"
-fi
-
-# Install Node.js (needed for various tools)
-if ! command -v node &> /dev/null; then
-    info "Installing Node.js..."
-    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-    sudo apt install -y nodejs
-else
-    info "Node.js already installed"
-    # Check for and remove NPM version of Claude Code if it exists
-    if npm list -g @anthropics/claude-code &> /dev/null; then
-        warn "Found NPM installation of Claude Code, removing to avoid conflicts..."
-        sudo npm uninstall -g @anthropics/claude-code
-    fi
-fi
-
-# Install Claude Code (native binary)
-if ! command -v claude-code &> /dev/null; then
-    info "Installing Claude Code (native)..."
-    curl -fsSL https://claude.ai/install.sh | bash
-    info "Configuring Claude Code onboarding..."
-    echo '{"hasCompletedOnboarding": true}' > ~/.claude.json
-else
-    info "Claude Code already installed"
 fi
 
 # Bitwarden login and unlock
@@ -158,11 +111,13 @@ else
     chezmoi init --apply "$GITHUB_USER"
 fi
 
-# Change default shell to zsh
-if [ "$SHELL" != "$(which zsh)" ]; then
-    info "Changing default shell to zsh..."
-    chsh -s "$(which zsh)" < /dev/tty
-fi
+# Run ansible-pull to install all packages and tools
+info "Running ansible-pull to configure system..."
+cd ~/.local/share/chezmoi
+ansible-pull -U "https://github.com/$GITHUB_USER/dotfiles.git" \
+    ansible/local.yml \
+    --ask-become-pass \
+    --directory ~/.local/share/ansible-pull
 
 echo ""
 info "Bootstrap complete!"

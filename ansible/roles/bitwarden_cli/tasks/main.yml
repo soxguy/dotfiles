@@ -1,0 +1,30 @@
+---
+- name: Check if Bitwarden CLI is installed
+  stat:
+    path: "{{ ansible_env.HOME }}/.local/bin/bw"
+  register: bw_bin
+  become: no
+
+- name: Download Bitwarden CLI
+  get_url:
+    url: "https://vault.bitwarden.com/download/?app=cli&platform=linux"
+    dest: "/tmp/bw.zip"
+    mode: '0644'
+  when: not bw_bin.stat.exists
+  become: no
+
+- name: Extract Bitwarden CLI
+  unarchive:
+    src: "/tmp/bw.zip"
+    dest: "{{ ansible_env.HOME }}/.local/bin"
+    remote_src: yes
+    mode: '0755'
+  when: not bw_bin.stat.exists
+  become: no
+
+- name: Clean up Bitwarden CLI download
+  file:
+    path: "/tmp/bw.zip"
+    state: absent
+  when: not bw_bin.stat.exists
+  become: no

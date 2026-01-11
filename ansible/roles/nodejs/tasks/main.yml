@@ -1,0 +1,31 @@
+---
+- name: Check if Node.js is installed
+  command: which node
+  register: node_check
+  changed_when: false
+  failed_when: false
+
+- name: Add NodeSource repository
+  shell: |
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
+  when: node_check.rc != 0
+
+- name: Install Node.js
+  apt:
+    name: nodejs
+    state: present
+  when: node_check.rc != 0
+
+- name: Check for NPM version of Claude Code
+  command: npm list -g @anthropics/claude-code
+  register: npm_claude_check
+  changed_when: false
+  failed_when: false
+  become: no
+
+- name: Remove NPM version of Claude Code if present
+  npm:
+    name: '@anthropics/claude-code'
+    global: yes
+    state: absent
+  when: npm_claude_check.rc == 0
