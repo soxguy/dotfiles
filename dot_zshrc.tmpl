@@ -64,14 +64,14 @@ alias cdr='cd ~/repos'
 
 # SSH Agent configuration
 if [ -z "$SSH_AUTH_SOCK" ]; then
-    # Check for a currently running instance of the agent
-    RUNNING_AGENT="`ps -ax | grep 'ssh-agent -s' | grep -v grep | wc -l | tr -d '[:space:]'`"
-    if [ "$RUNNING_AGENT" = "0" ]; then
-        # Launch a new instance of the agent
-        ssh-agent -s &> $HOME/.ssh/ssh-agent
-    fi
-    # Use 'command cat' to bypass the batcat alias, and check file exists
+    # Try to restore from saved state first
     if [ -f "$HOME/.ssh/ssh-agent" ]; then
+        eval `command cat $HOME/.ssh/ssh-agent`
+    fi
+
+    # If still no valid socket (file doesn't exist or agent died), start a new agent
+    if [ -z "$SSH_AUTH_SOCK" ]; then
+        ssh-agent -s &> $HOME/.ssh/ssh-agent
         eval `command cat $HOME/.ssh/ssh-agent`
     fi
 fi
