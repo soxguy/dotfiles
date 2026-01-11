@@ -1,37 +1,52 @@
 ---
-- name: Check if AWS CLI is installed
-  command: which aws
-  register: aws_check
+# AWS CLI v2 installation/upgrade
+# Installs to ~/.local/bin (user directory, no sudo required)
+# The --update flag handles both fresh installs and upgrades
+
+- name: Check if AWS CLI is installed in user directory
+  stat:
+    path: "{{ ansible_env.HOME }}/.local/bin/aws"
+  register: aws_user_bin
+
+- name: Get current AWS CLI version (if installed)
+  command: "{{ ansible_env.HOME }}/.local/bin/aws --version"
+  register: aws_current_version
   changed_when: false
   failed_when: false
+  when: aws_user_bin.stat.exists
 
 - name: Create temporary directory for AWS CLI installer
   tempfile:
     state: directory
     prefix: awscli_
   register: aws_temp_dir
-  when: aws_check.rc != 0
 
 - name: Download AWS CLI v2
   get_url:
     url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
     dest: "{{ aws_temp_dir.path }}/awscliv2.zip"
     mode: '0644'
-  when: aws_check.rc != 0
 
 - name: Extract AWS CLI installer
   unarchive:
     src: "{{ aws_temp_dir.path }}/awscliv2.zip"
     dest: "{{ aws_temp_dir.path }}"
     remote_src: yes
-  when: aws_check.rc != 0
 
-- name: Install AWS CLI to user local directory
+- name: Install/upgrade AWS CLI to user local directory
   command: "{{ aws_temp_dir.path }}/aws/install --install-dir {{ ansible_env.HOME }}/.local/aws-cli --bin-dir {{ ansible_env.HOME }}/.local/bin --update"
-  when: aws_check.rc != 0
+  register: aws_install_result
+
+- name: Get new AWS CLI version
+  command: "{{ ansible_env.HOME }}/.local/bin/aws --version"
+  register: aws_new_version
+  changed_when: false
+
+- name: Report AWS CLI version
+  debug:
+    msg: "AWS CLI {{ 'upgraded' if aws_user_bin.stat.exists else 'installed' }}: {{ aws_new_version.stdout }}"
 
 - name: Clean up AWS CLI installer
   file:
     path: "{{ aws_temp_dir.path }}"
     state: absent
-  when: aws_check.rc != 0
