@@ -4,9 +4,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is a chezmoi-managed dotfiles repository that uses Bitwarden CLI for secrets management. It's designed for Ubuntu/WSL2 environments and provides automated setup via bootstrap.sh.
+This is a chezmoi-managed dotfiles repository that uses Ansible for system configuration and Bitwarden CLI for secrets management. It's designed for Ubuntu/WSL2 environments with a minimal bootstrap.sh that delegates to Ansible via ansible-pull.
 
 ## Core Architecture
+
+### System Configuration (Ansible)
+
+The repository uses a hybrid approach with chezmoi and Ansible:
+
+1. **Bootstrap.sh** - Minimal script that installs only: Python, Ansible, chezmoi, Bitwarden CLI
+2. **chezmoi** - Manages dotfiles, templates, and secrets from Bitwarden
+3. **Ansible (ansible-pull)** - Manages system packages and tool installation via 8 roles
+4. **Integration** - chezmoi hook (`run_after_apply.sh.tmpl`) triggers ansible-pull after every apply/update
+
+**Workflow:** `chezmoi update` → pulls dotfiles → applies changes → runs ansible-pull → updates system packages
+
+**Ansible roles:**
+- system_packages: apt packages (git, zsh, vim, bat, eza, etc.)
+- starship: Starship prompt
+- bitwarden_cli: Bitwarden CLI
+- uv: Python package manager
+- homebrew: Homebrew
+- nodejs: Node.js LTS
+- claude_code: Claude Code CLI
+- antidote: Zsh plugin manager
 
 ### Secrets Management Flow
 
@@ -15,7 +36,7 @@ The repository uses a templating system where `.tmpl` files contain Bitwarden fu
 1. **Template files** (`.tmpl` suffix) contain Bitwarden function calls
 2. **chezmoi** processes templates and calls Bitwarden CLI via `bw` command
 3. **Bitwarden CLI** must be unlocked with `BW_SESSION` environment variable set
-4. **.zshrc wrapper** automatically unlocks Bitwarden before `chezmoi apply/update/init`
+4. **~/.config/zsh/secrets.zsh** contains wrapper that automatically unlocks Bitwarden before `chezmoi apply/update/init`
 
 ### Bitwarden Template Functions
 
@@ -108,11 +129,11 @@ bw get item "Item Name" | jq '.fields'
 
 ### Adding Environment Variables
 
-The `.zshrc.tmpl` automatically exports all custom fields from "API Keys - zsh ENV":
+The `~/.config/zsh/exports.zsh.tmpl` automatically exports all custom fields from "API Keys - zsh ENV":
 
 1. Add custom field to "API Keys - zsh ENV" in Bitwarden (field name = env var name)
 2. Run `bw sync` to pull changes locally
-3. Run `chezmoi apply` to regenerate `.zshrc`
+3. Run `chezmoi apply` to regenerate `~/.config/zsh/exports.zsh`
 4. Run `exec zsh` to reload shell with new variables
 
 No template changes needed - the loop handles all fields automatically.
@@ -130,47 +151,99 @@ Common template error: "template has no entry for key" means the Bitwarden item 
 
 ## Bootstrap Script (bootstrap.sh)
 
+**New architecture:** Minimal bootstrap that installs only essentials and delegates to Ansible.
+
 New machine setup workflow:
 
 1. Sets `PATH` to include `~/.local/bin` (where tools are installed)
-2. Installs system packages via apt (git, zsh, vim, jq, etc.)
-3. Installs Starship prompt to `~/.local/bin`
+2. Installs bootstrap essentials via apt: git, python3, python3-pip, python3-apt, curl, unzip, jq
+3. Installs Ansible (via PPA)
 4. Installs chezmoi to `~/.local/bin`
 5. Installs Bitwarden CLI as direct binary to `~/.local/bin`
-6. Installs uv (Python package manager)
-7. Handles Bitwarden login and unlock with session management
-8. Syncs Bitwarden vault
-9. Runs `chezmoi init --apply` (or `chezmoi update` if already initialized)
-10. Changes default shell to zsh
+6. Handles Bitwarden login and unlock with session management
+7. Syncs Bitwarden vault
+8. Runs `chezmoi init --apply` (or `chezmoi update` if already initialized)
+9. **Triggers ansible-pull automatically** (via `run_after_apply.sh.tmpl` hook)
+
+**What Ansible installs:**
+- System packages: git, zsh, vim, bat, eza, and more (via system_packages role)
+- Development tools: Starship, uv, Homebrew, Node.js, Claude Code (via respective roles)
+- Zsh plugin manager: antidote (via antidote role)
+- Changes default shell to zsh (post_task in ansible/local.yml)
 
 The script uses `GITHUB_USER` environment variable (defaults to "soxguy") to determine the dotfiles repository.
 
 ## Repository Structure
 
 ```
-~/.local/share/chezmoi/
-├── bootstrap.sh                           # New machine setup
-├── dot_zshrc.tmpl                        # Shell config with Bitwarden env vars
+~/.local/share/chezmoi/                    # Chezmoi source directory
+├── bootstrap.sh                            # Minimal bootstrap (Ansible, chezmoi, Bitwarden)
+├── run_after_apply.sh.tmpl                # Hook: triggers ansible-pull after chezmoi apply
+│
+├── ansible/                                # Ansible configuration
+│   ├── local.yml                          # Main playbook for ansible-pull
+│   └── roles/                             # Ansible roles (8 total)
+│       ├── system_packages/               # Apt packages
+│       ├── starship/                      # Starship prompt
+│       ├── bitwarden_cli/                 # Bitwarden CLI
+│       ├── uv/                            # Python package manager
+│       ├── homebrew/                      # Homebrew
+│       ├── nodejs/                        # Node.js LTS
+│       ├── claude_code/                   # Claude Code CLI
+│       └── antidote/                      # Zsh plugin manager
+│
+├── dot_zshrc                              # Minimal zsh loader
+├── dot_zsh_plugins.txt                    # Antidote plugin declarations
+│
 ├── dot_config/
-│   └── starship.toml                     # Prompt configuration
+│   ├── zsh/                               # Modular zsh configuration
+│   │   ├── path.zsh                       # PATH modifications
+│   │   ├── exports.zsh.tmpl               # Environment variables (from Bitwarden)
+│   │   ├── secrets.zsh.tmpl               # Bitwarden + SSH agent + key auto-loading
+│   │   ├── aliases.zsh                    # Command aliases
+│   │   ├── plugins.zsh                    # Antidote setup
+│   │   └── prompt.zsh                     # Starship initialization
+│   └── starship.toml                      # Starship prompt theme
+│
 └── private_dot_ssh/
-    ├── private_id_ed25519.tmpl           # SSH key from Bitwarden notes
-    └── id_ed25519.pub                    # Public key (static)
+    ├── private_id_ed25519.tmpl            # SSH private key (from Bitwarden)
+    └── id_ed25519.pub                     # SSH public key
 ```
 
 ## Key Implementation Details
 
-### .zshrc Bitwarden Integration
+### Modular ZSH Configuration
 
-The `.zshrc.tmpl` file:
+The zsh configuration is split into focused modules in `~/.config/zsh/`:
+
+**Main loader (`dot_zshrc`):**
+- Minimal file (~25 lines) that sources modular configs
+- Conditional sourcing: non-interactive shells only get PATH and exports
+- Interactive shells get full configuration (secrets, aliases, plugins, prompt)
+
+**Module files:**
+- `path.zsh` - PATH modifications (always loaded)
+- `exports.zsh.tmpl` - Environment variables from Bitwarden (always loaded)
+- `secrets.zsh.tmpl` - Bitwarden integration + SSH agent (interactive only)
+- `aliases.zsh` - Command aliases (interactive only)
+- `plugins.zsh` - Antidote plugin manager (interactive only)
+- `prompt.zsh` - Starship prompt (interactive only)
+
+### Bitwarden Integration
+
+The `~/.config/zsh/secrets.zsh.tmpl` file:
 - Defines `bwunlock()` function that checks `BW_SESSION` and unlocks if needed
 - Wraps `chezmoi` command to auto-unlock before `apply/update/init` operations
-- Exports environment variables by evaluating Bitwarden template functions at apply time
+- Manages SSH agent startup and restoration from saved state
 - Automatically loads SSH keys with passphrases from Bitwarden on shell startup
+
+The `~/.config/zsh/exports.zsh.tmpl` file:
+- Exports environment variables by evaluating Bitwarden template functions at apply time
+- Uses a loop to automatically export all custom fields from "API Keys - zsh ENV" item
 
 ### SSH Key Auto-Loading
 
-The `.zshrc.tmpl` automatically loads SSH keys on shell startup:
+The `~/.config/zsh/secrets.zsh.tmpl` automatically loads SSH keys on shell startup:
 
 1. SSH agent starts/restores from saved state
 2. If Bitwarden is unlocked, SSH key is auto-loaded using passphrase from vault
@@ -185,7 +258,7 @@ The `.zshrc.tmpl` automatically loads SSH keys on shell startup:
 **Setup**:
 1. Ensure "SSH Key - GitHub" item in Bitwarden has `passkey` custom field (Hidden type)
 2. Run `bw sync` to pull changes locally
-3. Run `chezmoi apply` to regenerate `.zshrc`
+3. Run `chezmoi apply` to regenerate `~/.config/zsh/secrets.zsh`
 4. Start new shell - key will auto-load if Bitwarden is unlocked
 
 **Note**: If Bitwarden is locked on shell startup, you'll see: "Note: SSH agent running, but SSH key not auto-loaded (Bitwarden locked)"

@@ -1,13 +1,15 @@
 # Dotfiles
 
-Personal dotfiles managed with [chezmoi](https://chezmoi.io/) and [Bitwarden](https://bitwarden.com/) for secrets management.
+Personal dotfiles managed with [chezmoi](https://chezmoi.io/), [Ansible](https://www.ansible.com/), and [Bitwarden](https://bitwarden.com/).
 
 ## What's Included
 
-- **zsh** configuration with [Starship](https://starship.rs/) prompt
-- **SSH keys** pulled securely from Bitwarden
-- **API keys** and tokens injected into shell environment
-- **Bootstrap script** for automated setup of new machines
+- **Modular zsh configuration** organized in `~/.config/zsh/` with [Starship](https://starship.rs/) prompt
+- **Ansible-based system configuration** via ansible-pull for reproducible environments
+- **SSH keys** pulled securely from Bitwarden with automatic passphrase loading
+- **API keys** and tokens injected into shell environment from Bitwarden
+- **Minimal bootstrap script** that installs essentials and delegates to Ansible
+- **Automated sync workflow** - `chezmoi update` handles dotfiles and system packages
 
 ## Prerequisites
 
@@ -15,8 +17,8 @@ Before setting up a new machine, ensure the following items exist in your Bitwar
 
 | Item Name | Type | Fields |
 |-----------|------|--------|
-| `SSH Key - GitHub` | Secure Note | Private key in the Notes field |
-| `API Keys - zsh ENV` | Secure Note | Custom fields: `HF_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN` |
+| `SSH Key - GitHub` | Secure Note | **Notes:** Private key<br>**Custom field:** `passkey` (Hidden) - SSH key passphrase for auto-loading |
+| `API Keys - zsh ENV` | Secure Note | Custom fields (any name = env var name): `HF_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN`, etc. |
 
 ## Setting Up a New Machine
 
@@ -28,18 +30,21 @@ curl -fsSL https://raw.githubusercontent.com/soxguy/dotfiles/main/bootstrap.sh |
 
 The script will:
 
-1. Install essential packages (git, zsh, vim, jq, curl, etc.)
-2. Install Starship prompt
-3. Install chezmoi and Bitwarden CLI
-4. Prompt you to log in and unlock Bitwarden
-5. Initialize chezmoi and apply your dotfiles
-6. Change your default shell to zsh
+1. Install bootstrap essentials: Python, Ansible, chezmoi, Bitwarden CLI
+2. Prompt you to log in and unlock Bitwarden
+3. Initialize chezmoi and apply your dotfiles
+4. **Trigger ansible-pull automatically** (via chezmoi hook) to install:
+   - System packages (git, zsh, vim, bat, eza, etc.)
+   - Development tools (Starship, uv, Homebrew, Node.js, Claude Code)
+   - Change default shell to zsh
 
 After completion, restart your terminal or run `exec zsh`.
 
+**Architecture:** Bootstrap.sh is minimal and installs only what's needed to run Ansible. All system configuration is managed by Ansible roles, triggered automatically when chezmoi applies your dotfiles.
+
 ## Day-to-Day Usage
 
-### Updating Dotfiles on a Machine
+### Updating Dotfiles and System Packages
 
 Pull and apply the latest changes from the repo:
 
@@ -47,7 +52,13 @@ Pull and apply the latest changes from the repo:
 chezmoi update
 ```
 
-This will prompt for Bitwarden unlock if needed (handled by the wrapper function in .zshrc).
+This single command will:
+1. Prompt for Bitwarden unlock if needed (via wrapper in `~/.config/zsh/secrets.zsh`)
+2. Pull latest dotfiles from git
+3. Apply dotfile changes to home directory
+4. **Run ansible-pull automatically** to update system packages and tools
+
+**Note:** The chezmoi hook (`run_after_apply.sh.tmpl`) triggers ansible-pull after every update, ensuring your system stays synchronized.
 
 ### Viewing Pending Changes
 
@@ -65,13 +76,24 @@ If you've manually edited the chezmoi source directory:
 chezmoi apply
 ```
 
-## Making Changes to Dotfiles
+## Making Changes
 
-### Editing an Existing File
+### Editing ZSH Configuration
+
+The zsh config is now modular. To edit specific functionality:
 
 ```bash
-# Open the file in your editor
-chezmoi edit ~/.zshrc
+# Edit PATH configuration
+chezmoi edit ~/.config/zsh/path.zsh
+
+# Edit aliases
+chezmoi edit ~/.config/zsh/aliases.zsh
+
+# Edit Bitwarden/SSH integration
+chezmoi edit ~/.config/zsh/secrets.zsh
+
+# Edit environment variables (template)
+chezmoi edit ~/.config/zsh/exports.zsh
 
 # Preview changes
 chezmoi diff
@@ -79,10 +101,33 @@ chezmoi diff
 # Apply changes
 chezmoi apply
 
+# Test in new shell
+exec zsh
+
 # Commit and push
 chezmoi cd
 git add -A
 git commit -m "Description of changes"
+git push
+```
+
+### Adding a System Package
+
+To add a package managed by Ansible:
+
+```bash
+# Edit the system packages role
+chezmoi edit ansible/roles/system_packages/tasks/main.yml
+
+# Add package to the list under 'name:' section
+
+# Apply and test
+chezmoi apply  # Triggers ansible-pull automatically
+
+# Commit and push
+chezmoi cd
+git add ansible/roles/system_packages/tasks/main.yml
+git commit -m "Add [package-name] to system packages"
 git push
 ```
 
@@ -108,9 +153,9 @@ git push
    - Add to an existing Secure Note as a custom field, or
    - Create a new Secure Note
 
-2. **If using a template with loops** (like `.zshrc` for environment variables):
-   - Simply add the custom field to the existing Bitwarden item
-   - No template changes needed - the loop will automatically pick it up
+2. **If using a template with loops** (like `~/.config/zsh/exports.zsh` for environment variables):
+   - Simply add the custom field to the "API Keys - zsh ENV" Bitwarden item
+   - No template changes needed - the loop will automatically export it
 
 3. **If manually referencing in a template:**
    ```bash
@@ -146,19 +191,43 @@ Example: `private_dot_ssh/private_id_ed25519.tmpl` becomes `~/.ssh/id_ed25519` w
 ## Directory Structure
 
 ```
-~/.local/share/chezmoi/          # Chezmoi source directory
-├── bootstrap.sh                  # New machine setup script
-├── dot_zshrc.tmpl               # .zshrc template (contains Bitwarden refs)
+~/.local/share/chezmoi/                    # Chezmoi source directory
+├── bootstrap.sh                            # Minimal bootstrap (Ansible, chezmoi, Bitwarden)
+├── run_after_apply.sh.tmpl                # Hook: triggers ansible-pull after chezmoi apply
+│
+├── ansible/                                # Ansible configuration
+│   ├── local.yml                          # Main playbook for ansible-pull
+│   └── roles/                             # Ansible roles (8 total)
+│       ├── system_packages/               # Apt packages (git, zsh, vim, bat, eza, etc.)
+│       ├── starship/                      # Starship prompt
+│       ├── bitwarden_cli/                 # Bitwarden CLI
+│       ├── uv/                            # Python package manager
+│       ├── homebrew/                      # Homebrew
+│       ├── nodejs/                        # Node.js LTS
+│       ├── claude_code/                   # Claude Code CLI
+│       └── antidote/                      # Zsh plugin manager
+│
+├── dot_zshrc                              # Minimal zsh loader (~25 lines)
+├── dot_zsh_plugins.txt                    # Antidote plugin declarations
+│
 ├── dot_config/
-│   └── starship.toml            # Starship prompt config
+│   ├── zsh/                               # Modular zsh configuration
+│   │   ├── path.zsh                       # PATH modifications
+│   │   ├── exports.zsh.tmpl               # Environment variables (from Bitwarden)
+│   │   ├── secrets.zsh.tmpl               # Bitwarden integration + SSH agent
+│   │   ├── aliases.zsh                    # Command aliases
+│   │   ├── plugins.zsh                    # Antidote setup
+│   │   └── prompt.zsh                     # Starship initialization
+│   └── starship.toml                      # Starship prompt theme
+│
 └── private_dot_ssh/
-    ├── private_id_ed25519.tmpl  # SSH private key (from Bitwarden)
-    └── id_ed25519.pub           # SSH public key
+    ├── private_id_ed25519.tmpl            # SSH private key (from Bitwarden)
+    └── id_ed25519.pub                     # SSH public key
 ```
 
 ## Bitwarden Helper Commands
 
-These are defined in .zshrc:
+These are defined in `~/.config/zsh/secrets.zsh`:
 
 ```bash
 # Manually unlock Bitwarden
@@ -168,6 +237,8 @@ bwunlock
 chezmoi update  # unlocks first, then updates
 chezmoi apply   # unlocks first, then applies
 ```
+
+**Auto-loading SSH keys:** If Bitwarden is unlocked on shell startup, your SSH keys are automatically loaded with passphrases from the vault (see `~/.config/zsh/secrets.zsh`).
 
 ## Troubleshooting
 
