@@ -209,6 +209,7 @@ The script uses `GITHUB_USER` environment variable (defaults to "soxguy") to det
 │
 ├── dot_config/
 │   ├── zsh/                               # Modular zsh configuration
+│   │   ├── local.zsh.example              # Template for local overrides (copy to local.zsh)
 │   │   ├── path.zsh                       # PATH modifications
 │   │   ├── private_exports.zsh.tmpl       # Environment variables (from Bitwarden, 0600 perms)
 │   │   ├── private_secrets.zsh.tmpl       # Bitwarden + SSH agent + key auto-loading (0600 perms)
@@ -244,18 +245,26 @@ The zsh configuration is split into focused modules in `~/.config/zsh/`:
 - `prompt.zsh` - Starship prompt (interactive only)
 
 **Using local.zsh for customization:**
-Create `~/.config/zsh/local.zsh` to override settings without modifying managed files:
+The repository includes `~/.config/zsh/local.zsh.example` with documented override examples. To use:
 ```bash
-# Example: Override Bitwarden item names
+cp ~/.config/zsh/local.zsh.example ~/.config/zsh/local.zsh
+# Edit local.zsh and uncomment/modify settings as needed
+```
+
+Common overrides (see `local.zsh.example` for full documentation):
+```bash
+# Override Bitwarden item names
 export BW_LOCAL_ACCT="custom-sudo-item"
 export BW_ENV_VARS_NOTE="My ENV Vars"
 
-# Example: Add custom PATH entries
+# Add custom PATH entries
 export PATH="/custom/bin:$PATH"
 
-# Example: Override aliases
+# Override aliases
 alias ls='ls --color=auto'
 ```
+
+**Note:** `local.zsh` is NOT managed by chezmoi - your changes persist across `chezmoi apply/update`.
 
 ### Bitwarden Integration
 

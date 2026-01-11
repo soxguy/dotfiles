@@ -1,0 +1,63 @@
+# ~/.config/zsh/local.zsh.example
+#
+# Local machine-specific configuration overrides
+# This file is NOT managed by chezmoi after creation
+#
+# To use: cp ~/.config/zsh/local.zsh.example ~/.config/zsh/local.zsh
+# Then uncomment and edit the settings you want to override
+
+# ============================================================
+# Bitwarden Configuration
+# ============================================================
+
+# Override the Bitwarden item name for sudo password
+# Default pattern: ubuntu-USERNAME (e.g., ubuntu-dawheat)
+# Uncomment to use a different item name:
+#export BW_LOCAL_ACCT="my-custom-sudo-item"
+
+# Override the Bitwarden item name for environment variables
+# Default: "API Keys - zsh ENV"
+# Uncomment to use a different item name:
+#export BW_ENV_VARS_NOTE="My Custom ENV Vars"
+
+# ============================================================
+# PATH Modifications
+# ============================================================
+
+# Add custom directories to PATH
+# These will be prepended before the managed path.zsh loads
+#export PATH="/custom/bin:$PATH"
+#export PATH="$HOME/.local/custom/bin:$PATH"
+
+# ============================================================
+# Environment Variables
+# ============================================================
+
+# Override or add custom environment variables
+#export EDITOR="vim"
+#export BROWSER="firefox"
+#export TERM="xterm-256color"
+
+# ============================================================
+# Aliases
+# ============================================================
+
+# Override or add custom aliases
+# These will override aliases defined in aliases.zsh
+#alias ls='ls --color=auto'
+#alias vim='nvim'
+#alias k='kubectl'
+
+# ============================================================
+# Machine-Specific Settings
+# ============================================================
+
+# Add any other machine-specific configuration here
+# Examples:
+# - Proxy settings
+# - Company-specific tools
+# - Local development environment variables
+# - Custom functions
+
+#export HTTP_PROXY="http://proxy.company.com:8080"
+#export HTTPS_PROXY="http://proxy.company.com:8080"
