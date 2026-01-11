@@ -3,6 +3,7 @@
   apt:
     update_cache: yes
     cache_valid_time: 3600
+  become: yes
 
 - name: Install essential packages
   apt:
@@ -21,3 +22,4 @@
       - zsh
       - unzip
     state: present
+  become: yes

@@ -4,7 +4,6 @@
   register: uv_check
   changed_when: false
   failed_when: false
-  become: no
 
 - name: Install uv
   shell: |
@@ -12,6 +11,5 @@
   args:
     creates: "{{ ansible_env.HOME }}/.local/bin/uv"
   when: uv_check.rc != 0
-  become: no
   environment:
     PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"

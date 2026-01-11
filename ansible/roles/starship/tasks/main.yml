@@ -3,7 +3,6 @@
   stat:
     path: "{{ ansible_env.HOME }}/.local/bin/starship"
   register: starship_bin
-  become: no
 
 - name: Install starship
   shell: |
@@ -11,4 +10,3 @@
   args:
     creates: "{{ ansible_env.HOME }}/.local/bin/starship"
   when: not starship_bin.stat.exists
-  become: no

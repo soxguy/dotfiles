@@ -10,4 +10,3 @@
   args:
     creates: /home/linuxbrew/.linuxbrew/bin/brew
   when: not brew_bin.stat.exists
-  become: no

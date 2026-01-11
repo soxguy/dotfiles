@@ -3,7 +3,6 @@
   stat:
     path: "{{ ansible_env.HOME }}/.local/bin/claude-code"
   register: claude_bin
-  become: no
 
 - name: Install Claude Code
   shell: |
@@ -11,7 +10,6 @@
   args:
     creates: "{{ ansible_env.HOME }}/.local/bin/claude-code"
   when: not claude_bin.stat.exists
-  become: no
   environment:
     PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
 
@@ -21,4 +19,3 @@
     dest: "{{ ansible_env.HOME }}/.claude.json"
     mode: '0644'
   when: not claude_bin.stat.exists
-  become: no
