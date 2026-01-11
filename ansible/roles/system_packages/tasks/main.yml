@@ -5,13 +5,17 @@
     cache_valid_time: 3600
   become: yes
 
+- name: Set eza/exa package name based on Ubuntu version
+  set_fact:
+    eza_package: "{{ 'exa' if ansible_distribution_version is version('24.04', '<') else 'eza' }}"
+
 - name: Install essential packages
   apt:
     name:
       - git
       - bat
       - nala
-      - eza
+      - "{{ eza_package }}"
       - dnsutils
       - ca-certificates
       - mtr
