@@ -1,9 +1,26 @@
 {{- $isWorkMachine := false -}}
+{{- $gitUserName := "" -}}
+{{- $gitUserEmail := "" -}}
+
 {{- if hasKey . "isWorkMachine" -}}
 {{-   $isWorkMachine = .isWorkMachine -}}
 {{- else -}}
 {{-   $isWorkMachine = promptBool "Is this a work machine" -}}
 {{- end -}}
 
+{{- if hasKey . "gitUserName" -}}
+{{-   $gitUserName = .gitUserName -}}
+{{- else -}}
+{{-   $gitUserName = promptString "Git user name" -}}
+{{- end -}}
+
+{{- if hasKey . "gitUserEmail" -}}
+{{-   $gitUserEmail = .gitUserEmail -}}
+{{- else -}}
+{{-   $gitUserEmail = promptString "Git user email" -}}
+{{- end -}}
+
 [data]
     isWorkMachine = {{ $isWorkMachine }}
+    gitUserName = {{ $gitUserName | quote }}
+    gitUserEmail = {{ $gitUserEmail | quote }}
