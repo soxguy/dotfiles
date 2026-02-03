@@ -18,6 +18,7 @@ Before setting up a new machine, ensure the following items exist in your Bitwar
 | Item Name | Type | Fields |
 |-----------|------|--------|
 | `SSH Key - GitHub` | Secure Note | **Notes:** Private key<br>**Custom field:** `passkey` (Hidden) - SSH key passphrase for auto-loading |
+| `SSH Key - Openclaw` | Secure Note | **Notes:** Private key (no passphrase) |
 | `API Keys - zsh ENV` | Secure Note | Custom fields (any name = env var name): `HF_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN`, etc. |
 
 ## Setting Up a New Machine
@@ -221,8 +222,10 @@ Example: `private_dot_ssh/private_id_ed25519.tmpl` becomes `~/.ssh/id_ed25519` w
 │   └── starship.toml                      # Starship prompt theme
 │
 └── private_dot_ssh/
-    ├── private_id_ed25519.tmpl            # SSH private key (from Bitwarden)
-    └── id_ed25519.pub                     # SSH public key
+    ├── private_id_ed25519.tmpl            # SSH private key - GitHub (from Bitwarden)
+    ├── id_ed25519.pub                     # SSH public key - GitHub
+    ├── private_jarvis_ed25519.tmpl        # SSH private key - Openclaw (from Bitwarden)
+    └── jarvis_ed25519.pub                 # SSH public key - Openclaw
 ```
 
 ## Bitwarden Helper Commands

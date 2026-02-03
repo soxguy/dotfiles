@@ -58,6 +58,7 @@ The repository expects these items in Bitwarden vault:
 | Item Name | Type | Usage |
 |-----------|------|-------|
 | `SSH Key - GitHub` | Secure Note | Private key in Notes field → `~/.ssh/id_ed25519`<br>Custom field `passkey` (Hidden) → SSH key passphrase for auto-loading |
+| `SSH Key - Openclaw` | Secure Note | Private key in Notes field → `~/.ssh/jarvis_ed25519`<br>**No passphrase** - key is not password protected |
 | `chezmoi-env-shared` | Secure Note | Custom fields for env vars exported on **all machines** (e.g., `HF_TOKEN`) |
 | `chezmoi-env-personal` | Secure Note | Custom fields for env vars exported only on **personal machines** |
 | `chezmoi-env-work` | Secure Note | Custom fields for env vars exported only on **work machines** |
@@ -248,8 +249,10 @@ The script uses `GITHUB_USER` environment variable (defaults to "soxguy") to det
 │   └── private_config-work.tmpl           # Work AWS SSO profiles (work machines only)
 │
 └── private_dot_ssh/
-    ├── private_id_ed25519.tmpl            # SSH private key (from Bitwarden)
-    └── id_ed25519.pub                     # SSH public key
+    ├── private_id_ed25519.tmpl            # SSH private key - GitHub (from Bitwarden)
+    ├── id_ed25519.pub                     # SSH public key - GitHub
+    ├── private_jarvis_ed25519.tmpl        # SSH private key - Openclaw (from Bitwarden)
+    └── jarvis_ed25519.pub                 # SSH public key - Openclaw
 ```
 
 ## Key Implementation Details
