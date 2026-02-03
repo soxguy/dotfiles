@@ -20,6 +20,7 @@
     - claude_code
     - antidote
     - aws_cli
+    - opencode
 
   post_tasks:
     - name: Check if default shell is zsh
