@@ -6,7 +6,7 @@
   tasks:
     - name: Ensure ~/.local/bin exists
       file:
-        path: "{{ ansible_env.HOME }}/.local/bin"
+        path: "{{ ansible_facts.env.HOME }}/.local/bin"
         state: directory
         mode: '0755'
 
@@ -30,7 +30,7 @@
 
     - name: Change default shell to zsh
       user:
-        name: "{{ ansible_env.USER }}"
+        name: "{{ ansible_facts.env.USER }}"
         shell: /usr/bin/zsh
       become: yes
       when: current_shell.stdout != '/usr/bin/zsh'

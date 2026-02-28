@@ -5,11 +5,11 @@
 
 - name: Check if AWS CLI is installed in user directory
   stat:
-    path: "{{ ansible_env.HOME }}/.local/bin/aws"
+    path: "{{ ansible_facts.env.HOME }}/.local/bin/aws"
   register: aws_user_bin
 
 - name: Get current AWS CLI version (if installed)
-  command: "{{ ansible_env.HOME }}/.local/bin/aws --version"
+  command: "{{ ansible_facts.env.HOME }}/.local/bin/aws --version"
   register: aws_current_version
   changed_when: false
   failed_when: false
@@ -34,11 +34,11 @@
     remote_src: yes
 
 - name: Install/upgrade AWS CLI to user local directory
-  command: "{{ aws_temp_dir.path }}/aws/install --install-dir {{ ansible_env.HOME }}/.local/aws-cli --bin-dir {{ ansible_env.HOME }}/.local/bin --update"
+  command: "{{ aws_temp_dir.path }}/aws/install --install-dir {{ ansible_facts.env.HOME }}/.local/aws-cli --bin-dir {{ ansible_facts.env.HOME }}/.local/bin --update"
   register: aws_install_result
 
 - name: Get new AWS CLI version
-  command: "{{ ansible_env.HOME }}/.local/bin/aws --version"
+  command: "{{ ansible_facts.env.HOME }}/.local/bin/aws --version"
   register: aws_new_version
   changed_when: false
 

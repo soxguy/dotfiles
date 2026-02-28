@@ -1,21 +1,21 @@
 ---
 - name: Check if Claude Code is installed
   stat:
-    path: "{{ ansible_env.HOME }}/.local/bin/claude-code"
+    path: "{{ ansible_facts.env.HOME }}/.local/bin/claude-code"
   register: claude_bin
 
 - name: Install Claude Code
   shell: |
     curl -fsSL https://claude.ai/install.sh | bash
   args:
-    creates: "{{ ansible_env.HOME }}/.local/bin/claude-code"
+    creates: "{{ ansible_facts.env.HOME }}/.local/bin/claude-code"
   when: not claude_bin.stat.exists
   environment:
-    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH }}"
 
 - name: Configure Claude Code onboarding
   copy:
     content: '{"hasCompletedOnboarding": true}'
-    dest: "{{ ansible_env.HOME }}/.claude.json"
+    dest: "{{ ansible_facts.env.HOME }}/.claude.json"
     mode: '0644'
   when: not claude_bin.stat.exists

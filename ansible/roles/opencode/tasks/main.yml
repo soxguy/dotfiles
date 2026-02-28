@@ -1,14 +1,14 @@
 ---
 - name: Check if Opencode is installed
   stat:
-    path: "{{ ansible_env.HOME }}/.opencode/bin/opencode"
+    path: "{{ ansible_facts.env.HOME }}/.opencode/bin/opencode"
   register: opencode_bin
 
 - name: Install Opencode
   shell: |
     curl -fsSL https://opencode.ai/install | bash
   args:
-    creates: "{{ ansible_env.HOME }}/.opencode/bin/opencode"
+    creates: "{{ ansible_facts.env.HOME }}/.opencode/bin/opencode"
   when: not opencode_bin.stat.exists
   environment:
-    PATH: "{{ ansible_env.HOME }}/.opencode/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ ansible_facts.env.HOME }}/.opencode/bin:{{ ansible_facts.env.PATH }}"

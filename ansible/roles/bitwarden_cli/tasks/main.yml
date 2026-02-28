@@ -1,7 +1,7 @@
 ---
 - name: Check if Bitwarden CLI is installed
   stat:
-    path: "{{ ansible_env.HOME }}/.local/bin/bw"
+    path: "{{ ansible_facts.env.HOME }}/.local/bin/bw"
   register: bw_bin
 
 - name: Download Bitwarden CLI
@@ -14,7 +14,7 @@
 - name: Extract Bitwarden CLI
   unarchive:
     src: "/tmp/bw.zip"
-    dest: "{{ ansible_env.HOME }}/.local/bin"
+    dest: "{{ ansible_facts.env.HOME }}/.local/bin"
     remote_src: yes
     mode: '0755'
   when: not bw_bin.stat.exists
