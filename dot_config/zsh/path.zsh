@@ -9,8 +9,11 @@ export PATH="$HOME/.local/bin:$PATH"
 # Snap packages
 export PATH="/snap/bin:$PATH"
 
-# Snap packages
+# Opencode
 export PATH="$HOME/.opencode/bin:$PATH"
+
+# npm global
+export PATH="$HOME/.npm-global/bin:$PATH"
 
 # Initialize Homebrew
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
