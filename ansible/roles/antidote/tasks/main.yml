@@ -1,13 +1,13 @@
 ---
 - name: Check if antidote is installed
   stat:
-    path: "{{ ansible_env.HOME }}/.antidote"
+    path: "{{ ansible_facts.env.HOME }}/.antidote"
   register: antidote_dir
 
 - name: Clone antidote plugin manager
   git:
     repo: https://github.com/mattmc3/antidote.git
-    dest: "{{ ansible_env.HOME }}/.antidote"
+    dest: "{{ ansible_facts.env.HOME }}/.antidote"
     depth: 1
     version: main
   when: not antidote_dir.stat.exists

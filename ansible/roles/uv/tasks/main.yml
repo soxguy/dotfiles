@@ -9,7 +9,7 @@
   shell: |
     curl -LsSf https://astral.sh/uv/install.sh | sh
   args:
-    creates: "{{ ansible_env.HOME }}/.local/bin/uv"
+    creates: "{{ ansible_facts.env.HOME }}/.local/bin/uv"
   when: uv_check.rc != 0
   environment:
-    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH }}"

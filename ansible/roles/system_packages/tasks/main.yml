@@ -7,7 +7,7 @@
 
 - name: Set eza/exa package name based on Ubuntu version
   set_fact:
-    eza_package: "{{ 'exa' if ansible_distribution_version is version('24.04', '<') else 'eza' }}"
+    eza_package: "{{ 'exa' if ansible_facts.distribution_version is version('24.04', '<') else 'eza' }}"
 
 - name: Install essential packages
   apt:
