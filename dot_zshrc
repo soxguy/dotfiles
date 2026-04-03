@@ -3,6 +3,11 @@
 # This file sources modular configuration from ~/.config/zsh/
 # Order matters: path → exports → [interactive: secrets → aliases → plugins → prompt]
 
+# Wait for systemd user session (WSL race condition fix)
+if [[ -n "$WSL_DISTRO_NAME" ]]; then
+    timeout 10 bash -c 'until [ -S /run/user/$UID/bus ]; do sleep 0.2; done' 2>/dev/null
+fi
+
 # Define config directory
 ZSHCONFDIR="${HOME}/.config/zsh"
 
