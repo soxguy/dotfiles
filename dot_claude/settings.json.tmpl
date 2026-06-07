@@ -1,18 +1,22 @@
-{{- $sub := (bitwardenFields "item" "chezmoi-env-shared").SECOND_BRAIN_SUBDIR.value -}}
+{{- $shared := bitwardenFields "item" "chezmoi-env-shared" -}}
+{{- $sub := "" -}}
+{{- if index $shared "SECOND_BRAIN_SUBDIR" -}}
+{{- $sub = (index $shared "SECOND_BRAIN_SUBDIR").value -}}
+{{- end -}}
 {{- if .isWorkMachine -}}
 {{- $work := bitwardenFields "item" "chezmoi-env-work" -}}
-{{- if $work.SECOND_BRAIN_SUBDIR -}}{{- $sub = $work.SECOND_BRAIN_SUBDIR.value -}}{{- end -}}
+{{- if index $work "SECOND_BRAIN_SUBDIR" -}}{{- $sub = (index $work "SECOND_BRAIN_SUBDIR").value -}}{{- end -}}
 {{- else -}}
 {{- $personal := bitwardenFields "item" "chezmoi-env-personal" -}}
-{{- if $personal.SECOND_BRAIN_SUBDIR -}}{{- $sub = $personal.SECOND_BRAIN_SUBDIR.value -}}{{- end -}}
+{{- if index $personal "SECOND_BRAIN_SUBDIR" -}}{{- $sub = (index $personal "SECOND_BRAIN_SUBDIR").value -}}{{- end -}}
 {{- end -}}
 {
   "extraKnownMarketplaces": [
-    {
+{{ if $sub }}    {
       "name": "second-brain",
       "path": "{{ .chezmoi.homeDir }}/{{ $sub }}"
     }
-  ],
+{{ end }}  ],
   "hooks": {
     "PreToolUse": [
       {
