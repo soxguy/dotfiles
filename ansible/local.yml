@@ -21,6 +21,7 @@
     - antidote
     - aws_cli
     - opencode
+    - second_brain
 
   post_tasks:
     - name: Check if default shell is zsh

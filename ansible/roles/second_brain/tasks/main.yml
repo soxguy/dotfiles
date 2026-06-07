@@ -1,0 +1,54 @@
+---
+- name: Ensure ~/repos exists
+  file:
+    path: "{{ ansible_facts.env.HOME }}/repos"
+    state: directory
+    mode: '0755'
+
+- name: Clone second-brain implementation repo
+  git:
+    repo: "git@github.com:soxguy/second-brain.git"
+    dest: "{{ ansible_facts.env.HOME }}/repos/second-brain"
+    update: no
+
+- name: Clone second-brain-knowledge repo
+  git:
+    repo: "git@github.com:soxguy/second-brain-knowledge.git"
+    dest: "{{ ansible_facts.env.HOME }}/repos/second-brain-knowledge"
+    update: no
+
+- name: Create domains symlink
+  file:
+    src: "{{ ansible_facts.env.HOME }}/repos/second-brain-knowledge/domains"
+    dest: "{{ ansible_facts.env.HOME }}/repos/second-brain/domains"
+    state: link
+
+- name: Install Python dependencies via uv
+  shell: |
+    cd {{ ansible_facts.env.HOME }}/repos/second-brain
+    uv venv .venv
+    uv pip install -r requirements.txt
+  args:
+    creates: "{{ ansible_facts.env.HOME }}/repos/second-brain/.venv/pyvenv.cfg"
+  environment:
+    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH }}"
+
+- name: Check if qmd is installed
+  command: which qmd
+  register: qmd_check
+  changed_when: false
+  failed_when: false
+
+- name: Install qmd globally via npm
+  npm:
+    name: "@tobilu/qmd"
+    global: yes
+    state: present
+  when: qmd_check.rc != 0
+
+- name: Install second-brain Claude Code plugin
+  command: claude /plugin install sb@second-brain
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH }}"

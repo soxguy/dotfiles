@@ -1,0 +1,10 @@
+{{- $sub := (bitwardenFields "item" "chezmoi-env-shared").SECOND_BRAIN_SUBDIR.value -}}
+{{- if .isWorkMachine -}}
+{{- $work := bitwardenFields "item" "chezmoi-env-work" -}}
+{{- if $work.SECOND_BRAIN_SUBDIR -}}{{- $sub = $work.SECOND_BRAIN_SUBDIR.value -}}{{- end -}}
+{{- else -}}
+{{- $personal := bitwardenFields "item" "chezmoi-env-personal" -}}
+{{- if $personal.SECOND_BRAIN_SUBDIR -}}{{- $sub = $personal.SECOND_BRAIN_SUBDIR.value -}}{{- end -}}
+{{- end -}}
+@RTK.md
+@{{ .chezmoi.homeDir }}/{{ $sub }}/CLAUDE.md
