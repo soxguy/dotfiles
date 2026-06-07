@@ -11,12 +11,14 @@
 {{- if index $personal "SECOND_BRAIN_SUBDIR" -}}{{- $sub = (index $personal "SECOND_BRAIN_SUBDIR").value -}}{{- end -}}
 {{- end -}}
 {
-  "extraKnownMarketplaces": [
-{{ if $sub }}    {
-      "name": "second-brain",
-      "path": "{{ .chezmoi.homeDir }}/{{ $sub }}"
+  "extraKnownMarketplaces": {
+{{ if $sub }}    "second-brain": {
+      "source": {
+        "source": "local",
+        "path": "{{ .chezmoi.homeDir }}/{{ $sub }}"
+      }
     }
-{{ end }}  ],
+{{ end }}  },
   "hooks": {
     "PreToolUse": [
       {
