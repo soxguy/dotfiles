@@ -39,11 +39,12 @@
   changed_when: false
   failed_when: false
 
-- name: Install qmd globally via npm
-  npm:
-    name: "@tobilu/qmd"
-    global: yes
-    state: present
+- name: Install qmd to user-local prefix via npm
+  shell: npm install -g @tobilu/qmd
+  args:
+    creates: "{{ ansible_facts.env.HOME }}/.local/bin/qmd"
+  environment:
+    NPM_CONFIG_PREFIX: "{{ ansible_facts.env.HOME }}/.local"
   when: qmd_check.rc != 0
 
 - name: Install second-brain Claude Code plugin
