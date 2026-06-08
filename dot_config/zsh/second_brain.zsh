@@ -22,10 +22,11 @@ second-brain() {
       ;;
     ingest) python3 "${SECOND_BRAIN_DIR}/tools/ingest.py" "$@" ;;
     query)  python3 "${SECOND_BRAIN_DIR}/tools/query.py"  "$@" ;;
+    domain-list) python3 "${SECOND_BRAIN_DIR}/tools/domain_list.py" "$@" ;;
     cd)     cd "${SECOND_BRAIN_DIR}" ;;
     *)
-      echo "Usage: second-brain <health|ingest|query|cd> [args]"
-      echo "       sb <health|ingest|query|cd> [args]"
+      echo "Usage: second-brain <health|ingest|query|domain-list|cd> [args]"
+      echo "       sb <health|ingest|query|domain-list|cd> [args]"
       ;;
   esac
 }
