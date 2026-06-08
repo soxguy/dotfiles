@@ -1,0 +1,6 @@
+[user]
+    name = Adam Wheat
+    email = adam.wheat@morningstar.com
+
+[url "git@github.com-work:"]
+    insteadOf = https://github.com/

@@ -1,6 +1,8 @@
-[user]
-    name = {{ .gitUserName }}
-    email = {{ .gitUserEmail }}
+[includeIf "gitdir:~/repos/personal/"]
+    path = ~/.gitconfig-personal
+
+[includeIf "gitdir:~/repos/work/"]
+    path = ~/.gitconfig-work
 
 [init]
     defaultBranch = main
