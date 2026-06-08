@@ -24,6 +24,12 @@ if [[ "$(uname)" == "Darwin" ]]; then
     elif [[ -x "/usr/local/bin/brew" ]]; then
         eval "$(/usr/local/bin/brew shellenv)"
     fi
+
+    # Bitwarden desktop SSH agent
+    export SSH_AUTH_SOCK="$HOME/Library/Containers/com.bitwarden.desktop/Data/.bitwarden-ssh-agent.sock"
+
+    # VSCode CLI
+    export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
 elif [[ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi

@@ -10,3 +10,10 @@ zstyle ':antidote:bundle' use-friendly-names 'yes'
 # Initialize antidote plugin manager (installed via Ansible)
 source ${HOME}/.antidote/antidote.zsh
 antidote load
+
+# Enable fzf-tab completion (must be after antidote load)
+enable-fzf-tab
+
+# History substring search keybindings (must be after antidote load)
+bindkey "$terminfo[kcuu1]" history-substring-search-up
+bindkey "$terminfo[kcud1]" history-substring-search-down

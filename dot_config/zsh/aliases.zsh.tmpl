@@ -12,6 +12,8 @@ elif command -v bat &>/dev/null; then
     alias cat='bat'
 fi
 
+export BAT_THEME="Nord"
+
 # Modern ls replacement
 alias l='eza --icons --group-directories-first --git --header'
 alias ls='eza --icons --group-directories-first --git --header -1'
@@ -20,7 +22,10 @@ alias la='eza --icons --group-directories-first --git --long --all --header'
 
 # Quick navigation
 alias cdr='cd ~/repos'
-
+{{ if .isWorkMachine -}}
+alias cdrw='cd ~/repos/work; ll'
+alias cdrp='cd ~/repos/personal; ll'
+{{ end -}}
 alias sudo='sudo '
 
 # Alias Nala for package management (Linux only)
