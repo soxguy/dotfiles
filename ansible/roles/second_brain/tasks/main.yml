@@ -18,10 +18,11 @@
     update: no
 
 - name: Create domains symlink
-  file:
-    src: "{{ ansible_facts.env.HOME }}/repos/second-brain-knowledge/domains"
-    dest: "{{ ansible_facts.env.HOME }}/repos/second-brain/domains"
-    state: link
+  shell: |
+    ln -sfn ../second-brain-knowledge/domains \
+      {{ ansible_facts.env.HOME }}/repos/second-brain/domains
+  args:
+    creates: "{{ ansible_facts.env.HOME }}/repos/second-brain/domains"
 
 - name: Install Python dependencies via uv
   shell: |
