@@ -12,16 +12,16 @@ export BW_LOCAL_ACCT
 
 # Shared environment variables (all machines)
 {{- range $key, $field := (bitwardenFields "item" "chezmoi-env-shared") }}
-export {{ $key }}={{ $field.value | quote }}
+export {{ $key }}={{ $field.value | replace "~/" (printf "%s/" $.chezmoi.homeDir) | quote }}
 {{- end }}
 
 # Machine-specific environment variables
 {{- if .isWorkMachine }}
 {{- range $key, $field := (bitwardenFields "item" "chezmoi-env-work") }}
-export {{ $key }}={{ $field.value | quote }}
+export {{ $key }}={{ $field.value | replace "~/" (printf "%s/" $.chezmoi.homeDir) | quote }}
 {{- end }}
 {{- else }}
 {{- range $key, $field := (bitwardenFields "item" "chezmoi-env-personal") }}
-export {{ $key }}={{ $field.value | quote }}
+export {{ $key }}={{ $field.value | replace "~/" (printf "%s/" $.chezmoi.homeDir) | quote }}
 {{- end }}
 {{- end }}
