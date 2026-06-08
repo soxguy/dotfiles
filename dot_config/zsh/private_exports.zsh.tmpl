@@ -12,16 +12,28 @@ export BW_LOCAL_ACCT
 
 # Shared environment variables (all machines)
 {{- range $key, $field := (bitwardenFields "item" "chezmoi-env-shared") }}
-export {{ $key }}={{ $field.value | replace "~/" (printf "%s/" $.chezmoi.homeDir) | quote }}
+{{- if hasSuffix "_HOME_PATH" $key }}
+export {{ trimSuffix "_HOME_PATH" $key }}={{ printf "%s/%s" $.chezmoi.homeDir $field.value | quote }}
+{{- else }}
+export {{ $key }}={{ $field.value | quote }}
+{{- end }}
 {{- end }}
 
 # Machine-specific environment variables
 {{- if .isWorkMachine }}
 {{- range $key, $field := (bitwardenFields "item" "chezmoi-env-work") }}
-export {{ $key }}={{ $field.value | replace "~/" (printf "%s/" $.chezmoi.homeDir) | quote }}
+{{- if hasSuffix "_HOME_PATH" $key }}
+export {{ trimSuffix "_HOME_PATH" $key }}={{ printf "%s/%s" $.chezmoi.homeDir $field.value | quote }}
+{{- else }}
+export {{ $key }}={{ $field.value | quote }}
+{{- end }}
 {{- end }}
 {{- else }}
 {{- range $key, $field := (bitwardenFields "item" "chezmoi-env-personal") }}
-export {{ $key }}={{ $field.value | replace "~/" (printf "%s/" $.chezmoi.homeDir) | quote }}
+{{- if hasSuffix "_HOME_PATH" $key }}
+export {{ trimSuffix "_HOME_PATH" $key }}={{ printf "%s/%s" $.chezmoi.homeDir $field.value | quote }}
+{{- else }}
+export {{ $key }}={{ $field.value | quote }}
+{{- end }}
 {{- end }}
 {{- end }}
