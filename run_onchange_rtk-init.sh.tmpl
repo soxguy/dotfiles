@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Installs rtk PreToolUse hook into ~/.claude/settings.json
+set -e
+
+if ! command -v rtk &>/dev/null; then
+  echo "rtk not found, skipping hook installation"
+  exit 0
+fi
+
+rtk init -g --auto-patch --hook-only
