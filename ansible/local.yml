@@ -1,5 +1,5 @@
 ---
-- name: Configure Ubuntu/WSL2 Development Environment
+- name: Configure Development Environment
   hosts: localhost
   connection: local
 
@@ -29,9 +29,13 @@
       register: current_shell
       changed_when: false
 
-    - name: Change default shell to zsh
+    - name: Change default shell to zsh (Linux only)
       user:
         name: "{{ ansible_facts.env.USER }}"
         shell: /usr/bin/zsh
       become: yes
-      when: current_shell.stdout != '/usr/bin/zsh'
+      when:
+        - current_shell.stdout != '/usr/bin/zsh'
+        - ansible_os_family != 'Darwin'
+      # macOS: chsh is restricted on managed Macs; /bin/zsh is the default and works fine
+      # To change manually: chsh -s /opt/homebrew/bin/zsh

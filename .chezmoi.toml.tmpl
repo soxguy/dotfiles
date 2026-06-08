@@ -24,3 +24,5 @@
     isWorkMachine = {{ $isWorkMachine }}
     gitUserName = {{ $gitUserName | quote }}
     gitUserEmail = {{ $gitUserEmail | quote }}
+    isDarwin = {{ eq .chezmoi.os "darwin" }}
+    isLinux = {{ eq .chezmoi.os "linux" }}

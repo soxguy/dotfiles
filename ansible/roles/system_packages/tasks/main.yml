@@ -1,15 +1,18 @@
 ---
+# Linux (apt) packages
 - name: Update apt cache
   apt:
     update_cache: yes
     cache_valid_time: 3600
   become: yes
+  when: ansible_os_family != "Darwin"
 
 - name: Set eza/exa package name based on Ubuntu version
   set_fact:
     eza_package: "{{ 'exa' if ansible_facts.distribution_version is version('24.04', '<') else 'eza' }}"
+  when: ansible_os_family != "Darwin"
 
-- name: Install essential packages
+- name: Install essential packages (Linux)
   apt:
     name:
       - git
@@ -29,3 +32,22 @@
       - wslu
     state: present
   become: yes
+  when: ansible_os_family != "Darwin"
+
+# macOS (Homebrew) packages
+- name: Install essential packages (macOS)
+  community.general.homebrew:
+    name:
+      - git
+      - bat
+      - eza
+      - bind
+      - mtr
+      - jq
+      - curl
+      - vim
+      - zsh
+      - unzip
+      - expect
+    state: present
+  when: ansible_os_family == "Darwin"

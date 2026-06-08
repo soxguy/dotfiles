@@ -18,6 +18,17 @@ echo "Running ansible-pull to update system packages and tools..."
 echo "Repository: https://github.com/$GITHUB_USER/dotfiles.git"
 echo ""
 
+# Change to chezmoi source directory to ensure we're using committed playbooks
+cd "{{ .chezmoi.sourceDir }}"
+
+{{ if .isDarwin -}}
+# macOS: Homebrew installs are user-space, no sudo needed
+ansible-pull \
+    --directory ~/.local/share/ansible-pull \
+    --url "https://github.com/$GITHUB_USER/dotfiles.git" \
+    ansible/local.yml
+{{ else -}}
+# Linux: sudo is required for apt installs and shell changes
 # Source exports to get BW_LOCAL_ACCT and other environment variables
 if [ -f "$HOME/.config/zsh/exports.zsh" ]; then
     source "$HOME/.config/zsh/exports.zsh"
@@ -74,15 +85,13 @@ fi
 echo "✓ Successfully retrieved sudo password from Bitwarden"
 echo ""
 
-# Change to chezmoi source directory to ensure we're using committed playbooks
-cd "{{ .chezmoi.sourceDir }}"
-
 # Run ansible-pull with sudo password from Bitwarden
 # Pass password via ANSIBLE_BECOME_PASS environment variable
 ANSIBLE_BECOME_PASS="$SUDO_PASSWORD" ansible-pull \
     --directory ~/.local/share/ansible-pull \
     --url "https://github.com/$GITHUB_USER/dotfiles.git" \
     ansible/local.yml
+{{ end -}}
 
 echo ""
 echo "Ansible configuration complete!"

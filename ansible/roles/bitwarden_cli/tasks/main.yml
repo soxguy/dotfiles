@@ -1,26 +1,19 @@
 ---
 - name: Check if Bitwarden CLI is installed
-  stat:
-    path: "{{ ansible_facts.env.HOME }}/.local/bin/bw"
-  register: bw_bin
+  command: which bw
+  register: bw_check
+  changed_when: false
+  failed_when: false
 
-- name: Download Bitwarden CLI
-  get_url:
-    url: "https://vault.bitwarden.com/download/?app=cli&platform=linux"
-    dest: "/tmp/bw.zip"
-    mode: '0644'
-  when: not bw_bin.stat.exists
+- name: Set brew binary path
+  set_fact:
+    brew_bin: "{{ '/opt/homebrew/bin/brew' if ansible_os_family == 'Darwin' else '/home/linuxbrew/.linuxbrew/bin/brew' }}"
+  when: bw_check.rc != 0
 
-- name: Extract Bitwarden CLI
-  unarchive:
-    src: "/tmp/bw.zip"
-    dest: "{{ ansible_facts.env.HOME }}/.local/bin"
-    remote_src: yes
-    mode: '0755'
-  when: not bw_bin.stat.exists
-
-- name: Clean up Bitwarden CLI download
-  file:
-    path: "/tmp/bw.zip"
-    state: absent
-  when: not bw_bin.stat.exists
+- name: Install Bitwarden CLI via Homebrew
+  community.general.homebrew:
+    name: bitwarden-cli
+    state: present
+  environment:
+    PATH: "{{ brew_bin | dirname }}:{{ ansible_facts.env.PATH }}"
+  when: bw_check.rc != 0

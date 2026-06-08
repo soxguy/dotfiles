@@ -1,52 +1,68 @@
 ---
 # AWS CLI v2 installation/upgrade
-# Installs to ~/.local/bin (user directory, no sudo required)
-# The --update flag handles both fresh installs and upgrades
 
-- name: Check if AWS CLI is installed in user directory
+# macOS: Homebrew install
+- name: Install AWS CLI (macOS)
+  community.general.homebrew:
+    name: awscli
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# Linux: download official installer to ~/.local/bin (no sudo required)
+- name: Check if AWS CLI is installed in user directory (Linux)
   stat:
     path: "{{ ansible_facts.env.HOME }}/.local/bin/aws"
   register: aws_user_bin
+  when: ansible_os_family != "Darwin"
 
 - name: Get current AWS CLI version (if installed)
   command: "{{ ansible_facts.env.HOME }}/.local/bin/aws --version"
   register: aws_current_version
   changed_when: false
   failed_when: false
-  when: aws_user_bin.stat.exists
+  when:
+    - ansible_os_family != "Darwin"
+    - aws_user_bin.stat.exists
 
-- name: Create temporary directory for AWS CLI installer
+- name: Create temporary directory for AWS CLI installer (Linux)
   tempfile:
     state: directory
     prefix: awscli_
   register: aws_temp_dir
+  when: ansible_os_family != "Darwin"
 
-- name: Download AWS CLI v2
+- name: Download AWS CLI v2 (Linux)
   get_url:
     url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
     dest: "{{ aws_temp_dir.path }}/awscliv2.zip"
     mode: '0644'
+  when: ansible_os_family != "Darwin"
 
-- name: Extract AWS CLI installer
+- name: Extract AWS CLI installer (Linux)
   unarchive:
     src: "{{ aws_temp_dir.path }}/awscliv2.zip"
     dest: "{{ aws_temp_dir.path }}"
     remote_src: yes
+  when: ansible_os_family != "Darwin"
 
-- name: Install/upgrade AWS CLI to user local directory
+- name: Install/upgrade AWS CLI to user local directory (Linux)
   command: "{{ aws_temp_dir.path }}/aws/install --install-dir {{ ansible_facts.env.HOME }}/.local/aws-cli --bin-dir {{ ansible_facts.env.HOME }}/.local/bin --update"
   register: aws_install_result
+  when: ansible_os_family != "Darwin"
 
 - name: Get new AWS CLI version
-  command: "{{ ansible_facts.env.HOME }}/.local/bin/aws --version"
+  command: aws --version
   register: aws_new_version
   changed_when: false
 
 - name: Report AWS CLI version
   debug:
-    msg: "AWS CLI {{ 'upgraded' if aws_user_bin.stat.exists else 'installed' }}: {{ aws_new_version.stdout }}"
+    msg: "AWS CLI: {{ aws_new_version.stdout }}"
 
-- name: Clean up AWS CLI installer
+- name: Clean up AWS CLI installer (Linux)
   file:
     path: "{{ aws_temp_dir.path }}"
     state: absent
+  when:
+    - ansible_os_family != "Darwin"
+    - aws_temp_dir is defined
