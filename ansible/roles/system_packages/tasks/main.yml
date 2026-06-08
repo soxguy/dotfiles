@@ -5,12 +5,12 @@
     update_cache: yes
     cache_valid_time: 3600
   become: yes
-  when: ansible_os_family != "Darwin"
+  when: ansible_facts['os_family'] != "Darwin"
 
 - name: Set eza/exa package name based on Ubuntu version
   set_fact:
     eza_package: "{{ 'exa' if ansible_facts.distribution_version is version('24.04', '<') else 'eza' }}"
-  when: ansible_os_family != "Darwin"
+  when: ansible_facts['os_family'] != "Darwin"
 
 - name: Install essential packages (Linux)
   apt:
@@ -32,7 +32,7 @@
       - wslu
     state: present
   become: yes
-  when: ansible_os_family != "Darwin"
+  when: ansible_facts['os_family'] != "Darwin"
 
 # macOS (Homebrew) packages
 - name: Install essential packages (macOS)
@@ -50,4 +50,4 @@
       - unzip
       - expect
     state: present
-  when: ansible_os_family == "Darwin"
+  when: ansible_facts['os_family'] == "Darwin"

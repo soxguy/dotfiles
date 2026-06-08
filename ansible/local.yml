@@ -36,6 +36,6 @@
       become: yes
       when:
         - current_shell.stdout != '/usr/bin/zsh'
-        - ansible_os_family != 'Darwin'
+        - ansible_facts['os_family'] != 'Darwin'
       # macOS: chsh is restricted on managed Macs; /bin/zsh is the default and works fine
       # To change manually: chsh -s /opt/homebrew/bin/zsh

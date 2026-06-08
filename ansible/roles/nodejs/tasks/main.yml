@@ -11,7 +11,7 @@
   become: yes
   when:
     - node_check.rc != 0
-    - ansible_os_family != "Darwin"
+    - ansible_facts['os_family'] != "Darwin"
 
 - name: Install Node.js (Linux)
   apt:
@@ -20,7 +20,7 @@
   become: yes
   when:
     - node_check.rc != 0
-    - ansible_os_family != "Darwin"
+    - ansible_facts['os_family'] != "Darwin"
 
 - name: Install Node.js (macOS)
   community.general.homebrew:
@@ -28,7 +28,7 @@
     state: present
   when:
     - node_check.rc != 0
-    - ansible_os_family == "Darwin"
+    - ansible_facts['os_family'] == "Darwin"
 
 - name: Check for NPM version of Claude Code
   command: npm list -g @anthropics/claude-code
@@ -41,5 +41,5 @@
     name: '@anthropics/claude-code'
     global: yes
     state: absent
-  become: "{{ ansible_os_family != 'Darwin' }}"
+  become: "{{ ansible_facts['os_family'] != 'Darwin' }}"
   when: npm_claude_check.rc == 0

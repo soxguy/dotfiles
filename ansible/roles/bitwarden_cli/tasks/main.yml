@@ -7,7 +7,7 @@
 
 - name: Set brew binary path
   set_fact:
-    brew_bin: "{{ '/opt/homebrew/bin/brew' if ansible_os_family == 'Darwin' else '/home/linuxbrew/.linuxbrew/bin/brew' }}"
+    brew_bin: "{{ '/opt/homebrew/bin/brew' if ansible_facts['os_family'] == 'Darwin' else '/home/linuxbrew/.linuxbrew/bin/brew' }}"
   when: bw_check.rc != 0
 
 - name: Install Bitwarden CLI via Homebrew

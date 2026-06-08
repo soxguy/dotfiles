@@ -6,14 +6,14 @@
   community.general.homebrew:
     name: awscli
     state: present
-  when: ansible_os_family == "Darwin"
+  when: ansible_facts['os_family'] == "Darwin"
 
 # Linux: download official installer to ~/.local/bin (no sudo required)
 - name: Check if AWS CLI is installed in user directory (Linux)
   stat:
     path: "{{ ansible_facts.env.HOME }}/.local/bin/aws"
   register: aws_user_bin
-  when: ansible_os_family != "Darwin"
+  when: ansible_facts['os_family'] != "Darwin"
 
 - name: Get current AWS CLI version (if installed)
   command: "{{ ansible_facts.env.HOME }}/.local/bin/aws --version"
@@ -21,7 +21,7 @@
   changed_when: false
   failed_when: false
   when:
-    - ansible_os_family != "Darwin"
+    - ansible_facts['os_family'] != "Darwin"
     - aws_user_bin.stat.exists
 
 - name: Create temporary directory for AWS CLI installer (Linux)
@@ -29,26 +29,26 @@
     state: directory
     prefix: awscli_
   register: aws_temp_dir
-  when: ansible_os_family != "Darwin"
+  when: ansible_facts['os_family'] != "Darwin"
 
 - name: Download AWS CLI v2 (Linux)
   get_url:
     url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
     dest: "{{ aws_temp_dir.path }}/awscliv2.zip"
     mode: '0644'
-  when: ansible_os_family != "Darwin"
+  when: ansible_facts['os_family'] != "Darwin"
 
 - name: Extract AWS CLI installer (Linux)
   unarchive:
     src: "{{ aws_temp_dir.path }}/awscliv2.zip"
     dest: "{{ aws_temp_dir.path }}"
     remote_src: yes
-  when: ansible_os_family != "Darwin"
+  when: ansible_facts['os_family'] != "Darwin"
 
 - name: Install/upgrade AWS CLI to user local directory (Linux)
   command: "{{ aws_temp_dir.path }}/aws/install --install-dir {{ ansible_facts.env.HOME }}/.local/aws-cli --bin-dir {{ ansible_facts.env.HOME }}/.local/bin --update"
   register: aws_install_result
-  when: ansible_os_family != "Darwin"
+  when: ansible_facts['os_family'] != "Darwin"
 
 - name: Get new AWS CLI version
   command: aws --version
@@ -64,5 +64,5 @@
     path: "{{ aws_temp_dir.path }}"
     state: absent
   when:
-    - ansible_os_family != "Darwin"
+    - ansible_facts['os_family'] != "Darwin"
     - aws_temp_dir is defined

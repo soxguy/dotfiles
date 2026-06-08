@@ -9,13 +9,13 @@
       - tar
     state: present
   become: yes
-  when: ansible_os_family != "Darwin"
+  when: ansible_facts['os_family'] != "Darwin"
 
 - name: Check if Linuxbrew is installed
   stat:
     path: /home/linuxbrew/.linuxbrew/bin/brew
   register: brew_stat
-  when: ansible_os_family != "Darwin"
+  when: ansible_facts['os_family'] != "Darwin"
 
 - block:
   - name: Create Homebrew directory
@@ -32,7 +32,7 @@
       curl -fsSL https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C /home/linuxbrew/.linuxbrew
 
   when:
-    - ansible_os_family != "Darwin"
+    - ansible_facts['os_family'] != "Darwin"
     - not brew_stat.stat.exists
   environment:
     PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
@@ -40,7 +40,7 @@
 # Both platforms: install packages via Homebrew
 - name: Set brew binary path
   set_fact:
-    brew_bin: "{{ '/opt/homebrew/bin/brew' if ansible_os_family == 'Darwin' else '/home/linuxbrew/.linuxbrew/bin/brew' }}"
+    brew_bin: "{{ '/opt/homebrew/bin/brew' if ansible_facts['os_family'] == 'Darwin' else '/home/linuxbrew/.linuxbrew/bin/brew' }}"
 
 - name: Install Homebrew packages
   community.general.homebrew:
