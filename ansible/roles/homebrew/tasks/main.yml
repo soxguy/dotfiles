@@ -31,3 +31,11 @@
   when: not brew_stat.stat.exists
   environment:
     PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
+
+- name: Install Homebrew packages
+  community.general.homebrew:
+    name:
+      - rtk
+    state: present
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts.env.PATH }}"
