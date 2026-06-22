@@ -10,7 +10,6 @@
 format = """\
 [](fg:#659CD9)\
 $os\
-$sudo\
 $shell\
 [](fg:#659CD9 bg:#3960A7)\
 $directory\
@@ -51,10 +50,7 @@ Windows = " "
 Ubuntu = " "
 
 [sudo]
-disabled = false
-symbol = "🧙"
-format = '[$symbol ]($style)'
-style = "bg:#C2B4DF"
+disabled = true
 
 [shell]
 disabled = false
