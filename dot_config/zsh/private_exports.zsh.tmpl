@@ -44,3 +44,7 @@ export {{ $key }}={{ $field.value | quote }}
 {{- end }}
 {{- end }}
 {{- end }}
+
+# AI client key mappings (derived from LiteLLM vars)
+[[ -n "${LITELLM_API_KEY:-}" ]] && export ANTHROPIC_AUTH_TOKEN="$LITELLM_API_KEY"
+[[ -n "${LITELLM_API_GATEWAY:-}" ]] && export ANTHROPIC_BASE_URL="$LITELLM_API_GATEWAY"
