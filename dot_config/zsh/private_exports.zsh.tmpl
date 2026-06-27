@@ -49,6 +49,6 @@ export {{ $key }}={{ $field.value | quote }}
 [[ -n "${LITELLM_API_KEY:-}" ]] && export ANTHROPIC_AUTH_TOKEN="$LITELLM_API_KEY"
 [[ -n "${LITELLM_API_GATEWAY:-}" ]] && export ANTHROPIC_BASE_URL="$LITELLM_API_GATEWAY"
 
-# Claude Plugin
-[[ -n "${LITELLM_API_KEY:-}" ]] && export LITELLM_PROXY_API_KEY="$LITELLM_API_KEY"
+# Claude Plugin — uses management key so it can call /key/info (regular key is route-restricted)
+[[ -n "${LITELLM_API_MGMT_KEY:-}" ]] && export LITELLM_PROXY_API_KEY="$LITELLM_API_MGMT_KEY"
 [[ -n "${LITELLM_API_GATEWAY:-}" ]] && export LITELLM_PROXY_URL="$LITELLM_API_GATEWAY"
