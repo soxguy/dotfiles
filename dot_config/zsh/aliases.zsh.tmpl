@@ -15,10 +15,20 @@ fi
 export BAT_THEME="Nord"
 
 # Modern ls replacement
-alias l='eza --icons --group-directories-first --git --header'
-alias ls='eza --icons --group-directories-first --git --header -1'
-alias ll='eza --icons --group-directories-first --git --long --header'
-alias la='eza --icons --group-directories-first --git --long --all --header'
+# eza (Ubuntu 24.04+, macOS) is a fork of exa (Ubuntu <24.04) with identical flags;
+# detect whichever is installed at runtime.
+if command -v eza &>/dev/null; then
+    _EZA=eza
+elif command -v exa &>/dev/null; then
+    _EZA=exa
+fi
+if [[ -n "$_EZA" ]]; then
+    alias l="$_EZA --icons --group-directories-first --git --header"
+    alias ls="$_EZA --icons --group-directories-first --git --header -1"
+    alias ll="$_EZA --icons --group-directories-first --git --long --header"
+    alias la="$_EZA --icons --group-directories-first --git --long --all --header"
+fi
+unset _EZA
 
 # Quick navigation
 alias cdr='cd ~/repos'
