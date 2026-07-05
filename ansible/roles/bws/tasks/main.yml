@@ -1,0 +1,77 @@
+---
+# Bitwarden Secrets Manager CLI (bws)
+# Personal machines only (gated in local.yml via is_work_machine).
+# Distributed only as direct binary zips from GitHub releases
+# (bitwarden/sdk-sm) — no Homebrew/cargo. Installed to ~/.local/bin (no sudo).
+
+- name: Determine bws release asset for this platform
+  set_fact:
+    bws_asset: >-
+      {{ 'bws-macos-universal'
+         if ansible_facts['os_family'] == 'Darwin'
+         else 'bws-aarch64-unknown-linux-gnu'
+         if ansible_facts['architecture'] == 'aarch64'
+         else 'bws-x86_64-unknown-linux-gnu' }}
+
+- name: Get bws releases from GitHub
+  uri:
+    url: https://api.github.com/repos/bitwarden/sdk-sm/releases
+    return_content: yes
+  register: bws_releases
+
+- name: Resolve latest bws version
+  set_fact:
+    bws_latest_version: >-
+      {{ bws_releases.json
+         | selectattr('tag_name', 'match', '^bws-v')
+         | map(attribute='tag_name')
+         | first
+         | regex_replace('^bws-v', '') }}
+
+- name: Check installed bws version
+  command: "{{ ansible_facts.env.HOME }}/.local/bin/bws --version"
+  register: bws_installed
+  changed_when: false
+  failed_when: false
+
+- name: Install/upgrade bws
+  when: bws_installed.rc != 0 or bws_latest_version not in bws_installed.stdout
+  block:
+    - name: Create temporary directory for bws installer
+      tempfile:
+        state: directory
+        prefix: bws_
+      register: bws_temp_dir
+
+    - name: Download bws release
+      get_url:
+        url: "https://github.com/bitwarden/sdk-sm/releases/download/bws-v{{ bws_latest_version }}/{{ bws_asset }}-{{ bws_latest_version }}.zip"
+        dest: "{{ bws_temp_dir.path }}/bws.zip"
+        mode: '0644'
+
+    - name: Extract bws
+      unarchive:
+        src: "{{ bws_temp_dir.path }}/bws.zip"
+        dest: "{{ bws_temp_dir.path }}"
+        remote_src: yes
+
+    - name: Install bws to ~/.local/bin
+      copy:
+        src: "{{ bws_temp_dir.path }}/bws"
+        dest: "{{ ansible_facts.env.HOME }}/.local/bin/bws"
+        mode: '0755'
+        remote_src: yes
+
+    - name: Clean up bws installer
+      file:
+        path: "{{ bws_temp_dir.path }}"
+        state: absent
+
+- name: Report bws version
+  command: "{{ ansible_facts.env.HOME }}/.local/bin/bws --version"
+  register: bws_final_version
+  changed_when: false
+
+- name: Show bws version
+  debug:
+    msg: "bws: {{ bws_final_version.stdout }}"

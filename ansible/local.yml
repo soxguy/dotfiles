@@ -3,6 +3,11 @@
   hosts: localhost
   connection: local
 
+  vars:
+    # Overridden by --extra-vars from run_after_apply.sh.tmpl (chezmoi .isWorkMachine).
+    # Defaults to a personal machine when run manually without the flag.
+    is_work_machine: false
+
   tasks:
     - name: Ensure ~/.local/bin exists
       file:
@@ -22,6 +27,8 @@
     - aws_cli
     - opencode
     - second_brain
+    - role: bws
+      when: not (is_work_machine | bool)
 
   post_tasks:
     - name: Check if default shell is zsh
