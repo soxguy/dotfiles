@@ -28,69 +28,79 @@ ansible-pull \
     --url "https://github.com/$GITHUB_USER/dotfiles.git" \
     ansible/local.yml
 {{ else -}}
-# Linux: sudo is required for apt installs and shell changes
-# Source exports to get BW_LOCAL_ACCT and other environment variables
-if [ -f "$HOME/.config/zsh/exports.zsh" ]; then
-    source "$HOME/.config/zsh/exports.zsh"
-fi
-
-# Check if Bitwarden is unlocked
-if ! bw status | jq -e '.status == "unlocked"' > /dev/null 2>&1; then
-    echo "Error: Bitwarden vault must be unlocked to retrieve sudo password"
-    echo "Run 'bwunlock' to unlock your vault"
-    exit 1
-fi
-
-# Check if BW_LOCAL_ACCT is set
-if [ -z "$BW_LOCAL_ACCT" ]; then
-    echo "Error: BW_LOCAL_ACCT environment variable not set"
-    echo "This should be exported from ~/.config/zsh/exports.zsh"
-    exit 1
-fi
-
-# Retrieve sudo password from Bitwarden
-SUDO_PASSWORD=$(bw get password "$BW_LOCAL_ACCT" 2>&1)
-BW_GET_EXIT=$?
-
-# If retrieval failed, try syncing and retry once
-if [ $BW_GET_EXIT -ne 0 ] || [ -z "$SUDO_PASSWORD" ]; then
-    echo "Note: Could not retrieve sudo password, syncing Bitwarden vault..."
-    if bw sync > /dev/null 2>&1; then
-        echo "Sync complete, retrying password retrieval..."
-        SUDO_PASSWORD=$(bw get password "$BW_LOCAL_ACCT" 2>&1)
-        BW_GET_EXIT=$?
+# Linux: sudo may be required for apt installs and shell changes.
+# If NOPASSWD sudo is available, skip Bitwarden entirely.
+if sudo -n true 2>/dev/null; then
+    echo "NOPASSWD sudo detected — skipping Bitwarden password retrieval"
+    ansible-pull \
+        --directory ~/.local/share/ansible-pull \
+        --url "https://github.com/$GITHUB_USER/dotfiles.git" \
+        ansible/local.yml
+else
+    # Password sudo: retrieve become password from Bitwarden.
+    # Source exports to get BW_LOCAL_ACCT and other environment variables
+    if [ -f "$HOME/.config/zsh/exports.zsh" ]; then
+        source "$HOME/.config/zsh/exports.zsh"
     fi
+
+    # Check if Bitwarden is unlocked
+    if ! bw status | jq -e '.status == "unlocked"' > /dev/null 2>&1; then
+        echo "Error: Bitwarden vault must be unlocked to retrieve sudo password"
+        echo "Run 'bwunlock' to unlock your vault"
+        exit 1
+    fi
+
+    # Check if BW_LOCAL_ACCT is set
+    if [ -z "$BW_LOCAL_ACCT" ]; then
+        echo "Error: BW_LOCAL_ACCT environment variable not set"
+        echo "This should be exported from ~/.config/zsh/exports.zsh"
+        exit 1
+    fi
+
+    # Retrieve sudo password from Bitwarden
+    SUDO_PASSWORD=$(bw get password "$BW_LOCAL_ACCT" 2>&1)
+    BW_GET_EXIT=$?
+
+    # If retrieval failed, try syncing and retry once
+    if [ $BW_GET_EXIT -ne 0 ] || [ -z "$SUDO_PASSWORD" ]; then
+        echo "Note: Could not retrieve sudo password, syncing Bitwarden vault..."
+        if bw sync > /dev/null 2>&1; then
+            echo "Sync complete, retrying password retrieval..."
+            SUDO_PASSWORD=$(bw get password "$BW_LOCAL_ACCT" 2>&1)
+            BW_GET_EXIT=$?
+        fi
+    fi
+
+    # If still failed, show detailed error
+    if [ $BW_GET_EXIT -ne 0 ] || [ -z "$SUDO_PASSWORD" ]; then
+        echo ""
+        echo "=========================================="
+        echo "ERROR: Failed to retrieve sudo password"
+        echo "=========================================="
+        echo ""
+        echo "Could not retrieve password from Bitwarden item: '$BW_LOCAL_ACCT'"
+        echo ""
+        echo "Troubleshooting steps:"
+        echo "  1. Ensure the Bitwarden item exists with that exact name"
+        echo "  2. Verify the item name: bw get item '$BW_LOCAL_ACCT'"
+        echo "  3. Check that the item has a password field set"
+        echo ""
+        echo "Bitwarden error output:"
+        echo "$SUDO_PASSWORD"
+        echo ""
+        exit 1
+    fi
+
+    echo "✓ Successfully retrieved sudo password from Bitwarden"
+    echo ""
+
+    # Run ansible-pull with sudo password from Bitwarden
+    # Pass password via ANSIBLE_BECOME_PASS environment variable
+    ANSIBLE_BECOME_PASS="$SUDO_PASSWORD" ansible-pull \
+        --directory ~/.local/share/ansible-pull \
+        --url "https://github.com/$GITHUB_USER/dotfiles.git" \
+        ansible/local.yml
 fi
-
-# If still failed, show detailed error
-if [ $BW_GET_EXIT -ne 0 ] || [ -z "$SUDO_PASSWORD" ]; then
-    echo ""
-    echo "=========================================="
-    echo "ERROR: Failed to retrieve sudo password"
-    echo "=========================================="
-    echo ""
-    echo "Could not retrieve password from Bitwarden item: '$BW_LOCAL_ACCT'"
-    echo ""
-    echo "Troubleshooting steps:"
-    echo "  1. Ensure the Bitwarden item exists with that exact name"
-    echo "  2. Verify the item name: bw get item '$BW_LOCAL_ACCT'"
-    echo "  3. Check that the item has a password field set"
-    echo ""
-    echo "Bitwarden error output:"
-    echo "$SUDO_PASSWORD"
-    echo ""
-    exit 1
-fi
-
-echo "✓ Successfully retrieved sudo password from Bitwarden"
-echo ""
-
-# Run ansible-pull with sudo password from Bitwarden
-# Pass password via ANSIBLE_BECOME_PASS environment variable
-ANSIBLE_BECOME_PASS="$SUDO_PASSWORD" ansible-pull \
-    --directory ~/.local/share/ansible-pull \
-    --url "https://github.com/$GITHUB_USER/dotfiles.git" \
-    ansible/local.yml
 {{ end -}}
 
 echo ""
