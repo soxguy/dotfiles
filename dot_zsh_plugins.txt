@@ -12,11 +12,11 @@ belak/zsh-utils path:editor
 # History configuration
 belak/zsh-utils path:history
 
-# Syntax highlighting - Load late (after compinit)
-zsh-users/zsh-syntax-highlighting
-
-# Autosuggestions - Load after syntax highlighting
+# Autosuggestions
 zsh-users/zsh-autosuggestions
 
-# History search - Load last for keybinding priority
+# History search
 zsh-users/zsh-history-substring-search
+
+# Syntax highlighting - must be sourced last (wraps all current ZLE widgets)
+zsh-users/zsh-syntax-highlighting
