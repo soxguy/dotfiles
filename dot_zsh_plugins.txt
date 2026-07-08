@@ -19,4 +19,4 @@ zsh-users/zsh-autosuggestions
 zsh-users/zsh-history-substring-search
 
 # Syntax highlighting - must be sourced last (wraps all current ZLE widgets)
-zsh-users/zsh-syntax-highlighting
+zdharma-continuum/fast-syntax-highlighting
