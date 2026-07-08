@@ -13,7 +13,7 @@ belak/zsh-utils path:editor
 belak/zsh-utils path:history
 
 # Syntax highlighting - Load late (after compinit)
-zdharma-continuum/fast-syntax-highlighting
+zsh-users/zsh-syntax-highlighting
 
 # Autosuggestions - Load after syntax highlighting
 zsh-users/zsh-autosuggestions
