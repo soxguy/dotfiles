@@ -42,9 +42,9 @@
     - starship
     - bitwarden_cli
     - antidote
-    # bws is a package install: on a CI-managed dev box Ansible owns it (pinned,
-    # /usr/local/bin). This role installs an unpinned latest to ~/.local/bin,
-    # which would shadow it on PATH — so skip it there too.
+    # A CI-managed dev/agent box gets NO lab-wide secret access: it runs agents,
+    # it never deploys infrastructure (CI does). So no bws client here, and
+    # BWS_ACCESS_TOKEN is withheld from exports.zsh on such a box.
     - role: bws
       when:
         - not (is_work_machine | bool)

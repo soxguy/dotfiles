@@ -10,9 +10,20 @@
 : ${BW_LOCAL_ACCT:="ubuntu-{{ .chezmoi.username }}"}
 export BW_LOCAL_ACCT
 
+{{/* Never export lab-wide infrastructure credentials on a CI-managed dev/agent box.
+     BWS_ACCESS_TOKEN unlocks the whole Bitwarden Secrets Manager project (vCenter,
+     Terraform Cloud, the build SSH private key, Cloudflare, iDRAC). A box that runs
+     AI agents has no need to deploy infrastructure — that is the CI runner's job —
+     so it must not carry ambient credentials to the entire lab. */}}
+{{- $isDevBox := false }}
+{{- if hasKey . "isDevBox" }}{{- $isDevBox = .isDevBox }}{{- end }}
+{{- $devBoxDeny := list "BWS_ACCESS_TOKEN" }}
+
 # Shared environment variables (all machines)
 {{- range $key, $field := (bitwardenFields "item" "chezmoi-env-shared") }}
-{{- if hasSuffix "_HOME_PATH" $key }}
+{{- if and $isDevBox (has $key $devBoxDeny) }}
+# {{ $key }}: withheld on this dev/agent box (lab-wide infra credential)
+{{- else if hasSuffix "_HOME_PATH" $key }}
 export {{ trimSuffix "_HOME_PATH" $key }}={{ printf "%s/%s" $.chezmoi.homeDir $field.value | quote }}
 {{- else }}
 export {{ $key }}={{ $field.value | quote }}
@@ -37,7 +48,9 @@ export NODE_EXTRA_CA_CERTS="$ZSCALER_CERT"
 export REQUESTS_CA_BUNDLE="$BUNDLED_CERT"
 {{- else }}
 {{- range $key, $field := (bitwardenFields "item" "chezmoi-env-personal") }}
-{{- if hasSuffix "_HOME_PATH" $key }}
+{{- if and $isDevBox (has $key $devBoxDeny) }}
+# {{ $key }}: withheld on this dev/agent box (lab-wide infra credential)
+{{- else if hasSuffix "_HOME_PATH" $key }}
 export {{ trimSuffix "_HOME_PATH" $key }}={{ printf "%s/%s" $.chezmoi.homeDir $field.value | quote }}
 {{- else }}
 export {{ $key }}={{ $field.value | quote }}
