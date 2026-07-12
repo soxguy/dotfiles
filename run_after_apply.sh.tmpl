@@ -26,7 +26,7 @@ cd "{{ .chezmoi.sourceDir }}"
 ansible-pull \
     --directory ~/.local/share/ansible-pull \
     --url "https://github.com/$GITHUB_USER/dotfiles.git" \
-    --extra-vars "is_work_machine={{ .isWorkMachine }}" \
+    --extra-vars "is_work_machine={{ .isWorkMachine }} is_dev_box={{ .isDevBox }}" \
     ansible/local.yml
 {{ else -}}
 # Linux: sudo may be required for apt installs and shell changes.
@@ -36,7 +36,7 @@ if sudo -n true 2>/dev/null; then
     ansible-pull \
         --directory ~/.local/share/ansible-pull \
         --url "https://github.com/$GITHUB_USER/dotfiles.git" \
-        --extra-vars "is_work_machine={{ .isWorkMachine }}" \
+        --extra-vars "is_work_machine={{ .isWorkMachine }} is_dev_box={{ .isDevBox }}" \
         ansible/local.yml
 else
     # Password sudo: retrieve become password from Bitwarden.
@@ -101,7 +101,7 @@ else
     ANSIBLE_BECOME_PASS="$SUDO_PASSWORD" ansible-pull \
         --directory ~/.local/share/ansible-pull \
         --url "https://github.com/$GITHUB_USER/dotfiles.git" \
-        --extra-vars "is_work_machine={{ .isWorkMachine }}" \
+        --extra-vars "is_work_machine={{ .isWorkMachine }} is_dev_box={{ .isDevBox }}" \
         ansible/local.yml
 fi
 {{ end -}}
