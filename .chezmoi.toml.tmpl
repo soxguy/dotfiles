@@ -6,7 +6,18 @@
 {{-   $isWorkMachine = promptBool "Is this a work machine" -}}
 {{- end -}}
 
+{{- /* isDevBox: packages are installed by an external CI (Ansible), so the
+       ansible-pull layer here skips all package-install roles and does only
+       env/shell/Bitwarden. Set automatically on managed boxes. */ -}}
+{{- $isDevBox := false -}}
+{{- if hasKey . "isDevBox" -}}
+{{-   $isDevBox = .isDevBox -}}
+{{- else -}}
+{{-   $isDevBox = promptBool "Is this a CI-managed dev box (packages installed by Ansible)" -}}
+{{- end -}}
+
 [data]
     isWorkMachine = {{ $isWorkMachine }}
+    isDevBox = {{ $isDevBox }}
     isDarwin = {{ eq .chezmoi.os "darwin" }}
     isLinux = {{ eq .chezmoi.os "linux" }}

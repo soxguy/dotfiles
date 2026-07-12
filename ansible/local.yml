@@ -7,6 +7,11 @@
     # Overridden by --extra-vars from run_after_apply.sh.tmpl (chezmoi .isWorkMachine).
     # Defaults to a personal machine when run manually without the flag.
     is_work_machine: false
+    # On a CI-managed dev box, an external Ansible (homelab-vsphere) owns every
+    # package install. This layer then does ONLY env/shell/Bitwarden — every
+    # package-install role below is gated off — so the two never install
+    # conflicting versions (e.g. native vs npm Claude Code).
+    is_dev_box: false
 
   tasks:
     - name: Ensure ~/.local/bin exists
@@ -16,17 +21,27 @@
         mode: '0755'
 
   roles:
-    - system_packages
+    # Package-install roles — skipped on CI-managed dev boxes (is_dev_box).
+    - role: system_packages
+      when: not (is_dev_box | bool)
+    - role: uv
+      when: not (is_dev_box | bool)
+    - role: homebrew
+      when: not (is_dev_box | bool)
+    - role: nodejs
+      when: not (is_dev_box | bool)
+    - role: claude_code
+      when: not (is_dev_box | bool)
+    - role: aws_cli
+      when: not (is_dev_box | bool)
+    - role: opencode
+      when: not (is_dev_box | bool)
+    - role: second_brain
+      when: not (is_dev_box | bool)
+    # Env / shell / secrets — always run (this is the dotfiles' job on every box).
     - starship
     - bitwarden_cli
-    - uv
-    - homebrew
-    - nodejs
-    - claude_code
     - antidote
-    - aws_cli
-    - opencode
-    - second_brain
     - role: bws
       when: not (is_work_machine | bool)
 
