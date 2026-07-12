@@ -42,8 +42,13 @@
     - starship
     - bitwarden_cli
     - antidote
+    # bws is a package install: on a CI-managed dev box Ansible owns it (pinned,
+    # /usr/local/bin). This role installs an unpinned latest to ~/.local/bin,
+    # which would shadow it on PATH — so skip it there too.
     - role: bws
-      when: not (is_work_machine | bool)
+      when:
+        - not (is_work_machine | bool)
+        - not (is_dev_box | bool)
 
   post_tasks:
     - name: Check if default shell is zsh
