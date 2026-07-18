@@ -10,7 +10,7 @@
 format = """\
 [](fg:#659CD9)\
 $os\
-$shell\
+$hostname\
 [](fg:#659CD9 bg:#3960A7)\
 $directory\
 [](fg:#3960A7 bg:#9C9C9C)\
@@ -53,7 +53,7 @@ Ubuntu = " "
 disabled = true
 
 [shell]
-disabled = false
+disabled = true
 zsh_indicator = 'zsh'
 powershell_indicator = ''
 style = 'fg:#F2F2F2 bg:#659CD9'
@@ -129,7 +129,10 @@ format = '[](fg:105)[$symbol]($style)[](fg:105)'
 style = 'fg:105 inverted'
 
 [hostname]
-disabled = true
+disabled = false
+ssh_only = false
+style = 'fg:#F2F2F2 bg:#659CD9'
+format = '[$hostname ]($style)'
 
 [kubernetes]
 disabled = true
