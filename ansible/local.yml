@@ -36,8 +36,6 @@
       when: not (is_dev_box | bool)
     - role: opencode
       when: not (is_dev_box | bool)
-    - role: second_brain
-      when: not (is_dev_box | bool)
     # Env / shell / secrets — always run (this is the dotfiles' job on every box).
     - starship
     - bitwarden_cli

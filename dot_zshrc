@@ -18,7 +18,6 @@ ZSHCONFDIR="${HOME}/.config/zsh"
 # Always source these (needed for all shells, including non-interactive)
 [[ -f "$ZSHCONFDIR/path.zsh" ]] && source "$ZSHCONFDIR/path.zsh"
 [[ -f "$ZSHCONFDIR/exports.zsh" ]] && source "$ZSHCONFDIR/exports.zsh"
-[[ -f "$ZSHCONFDIR/second_brain.zsh" ]] && source "$ZSHCONFDIR/second_brain.zsh"
 
 # Only source interactive-only files when running an interactive shell
 if [[ $- == *i* ]]; then

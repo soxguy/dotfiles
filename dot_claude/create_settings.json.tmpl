@@ -1,24 +1,4 @@
-{{- $shared := bitwardenFields "item" "chezmoi-env-shared" -}}
-{{- $sub := "" -}}
-{{- if index $shared "SECOND_BRAIN_SUBDIR" -}}
-{{- $sub = (index $shared "SECOND_BRAIN_SUBDIR").value -}}
-{{- end -}}
-{{- if .isWorkMachine -}}
-{{- $work := bitwardenFields "item" "chezmoi-env-work" -}}
-{{- if index $work "SECOND_BRAIN_SUBDIR" -}}{{- $sub = (index $work "SECOND_BRAIN_SUBDIR").value -}}{{- end -}}
-{{- else -}}
-{{- $personal := bitwardenFields "item" "chezmoi-env-personal" -}}
-{{- if index $personal "SECOND_BRAIN_SUBDIR" -}}{{- $sub = (index $personal "SECOND_BRAIN_SUBDIR").value -}}{{- end -}}
-{{- end -}}
 {
-  "extraKnownMarketplaces": {
-{{ if $sub }}    "second-brain": {
-      "source": {
-        "source": "directory",
-        "path": "{{ .chezmoi.homeDir }}/{{ $sub }}"
-      }
-    }
-{{ end }}  },
   "agentPushNotifEnabled": true,
   "model": "sonnet"
 }
