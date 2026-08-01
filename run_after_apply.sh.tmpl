@@ -42,7 +42,9 @@ else
     # Password sudo: retrieve become password from Bitwarden.
     # Source exports to get BW_LOCAL_ACCT and other environment variables
     if [ -f "$HOME/.config/zsh/exports.zsh" ]; then
-        source "$HOME/.config/zsh/exports.zsh"
+        # '|| true': exports.zsh ends in conditional exports that return 1 when
+        # the guarded var is unset, which would abort this script under 'set -e'.
+        source "$HOME/.config/zsh/exports.zsh" || true
     fi
 
     # Check if Bitwarden is unlocked
