@@ -35,6 +35,23 @@
   become: yes
   when: ansible_facts['os_family'] != "Darwin"
 
+# Docker Desktop leaves dangling completion symlinks into /mnt/wsl/docker-desktop
+# when it is stopped or uninstalled, which makes compinit error on every new shell
+- name: Check for zsh vendor-completions directory (Linux)
+  stat:
+    path: /usr/share/zsh/vendor-completions
+  register: vendor_completions
+  when: ansible_facts['os_family'] != "Darwin"
+
+- name: Remove broken zsh vendor-completion symlinks (Linux)
+  shell: find /usr/share/zsh/vendor-completions -xtype l -print -delete
+  register: broken_completions
+  changed_when: broken_completions.stdout != ""
+  become: yes
+  when:
+    - ansible_facts['os_family'] != "Darwin"
+    - vendor_completions.stat.exists | default(false)
+
 # macOS (Homebrew) packages
 - name: Install essential packages (macOS)
   community.general.homebrew:
