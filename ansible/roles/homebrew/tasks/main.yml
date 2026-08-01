@@ -46,6 +46,7 @@
   community.general.homebrew:
     name:
       - rtk
+      - herdr
     state: present
   environment:
     PATH: "{{ brew_bin | dirname }}:{{ ansible_facts.env.PATH }}"
