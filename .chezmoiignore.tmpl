@@ -9,3 +9,9 @@ bootstrap.sh
 # Skip work AWS config on personal machines
 .aws/config-work
 {{- end }}
+
+{{- if or .isWorkMachine .isDevBox }}
+# vSphere homelab key: personal machines only, never on managed dev boxes
+.ssh/vsphere_ed25519
+.ssh/vsphere_ed25519.pub
+{{- end }}
