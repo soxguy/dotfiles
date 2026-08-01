@@ -7,3 +7,7 @@ Host github.com-work
     HostName github.com
     IdentityFile ~/.ssh/github-work.pub
     IdentitiesOnly yes
+
+Host dev.home.wheatweb.com
+    IdentityFile ~/.ssh/vsphere_ed25519
+    IdentitiesOnly yes
